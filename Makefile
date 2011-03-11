@@ -97,8 +97,7 @@ DEFAULT_INCDIR		:= "$(DEFAULT_PREFIX)/include"
 
 ifeq ($(PLATFORM), Darwin)
 	PLAT_DARWIN := Yes
-	# Ben removed ppc and x86_64 to fix libgmp compilation
-	DEFAULT_MACARGS	:= -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386
+	DEFAULT_MACARGS	:= -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch x86_64 -arch i386 -arch ppc
 	VIS	:= -fvisibility=hidden
 endif
 ifeq ($(PLATFORM), Linux)
@@ -130,8 +129,7 @@ CONF_LIBGMP		+= --enable-shared=no
 CONF_LIBGMP		+= --enable-cxx
 # no assembler code
 ifdef PLAT_DARWIN
-# Ben turned off to fix bug in WED
-#CONF_LIBGMP		+= --enable-fat
+CONF_LIBGMP		+= --enable-fat
 CONF_LIBGMP		+= --host=none-apple-darwin
 endif
 ifdef PLAT_MINGW
@@ -202,7 +200,6 @@ endif
 # libtiff
 ARCHIVE_LIBTIFF		:= tiff-$(VER_LIBTIFF).tar.gz
 CFLAGS_LIBTIFF		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-CXXFLAGS_LIBTIFF	:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
 LDFLAGS_LIBTIFF		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_LIBTIFF		:= --prefix=$(DEFAULT_PREFIX)
 CONF_LIBTIFF		+= --enable-shared=no
@@ -491,7 +488,7 @@ libtiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libtiff
 	$(BE_QUIET)
 	@cd "tiff-$(VER_LIBTIFF)" && \
 	chmod +x configure && \
-	CFLAGS=$(CFLAGS_LIBTIFF) CXXFLAGS=$(CXXFLAGS_LIBTIFF) LDFLAGS=$(LDFLAGS_LIBTIFF) \
+	CFLAGS=$(CFLAGS_LIBTIFF) LDFLAGS=$(LDFLAGS_LIBTIFF) \
 	./configure $(CONF_LIBTIFF) $(BE_QUIET)
 	@$(MAKE) -C "tiff-$(VER_LIBTIFF)" $(BE_QUIET)
 	@$(MAKE) -C "tiff-$(VER_LIBTIFF)" install $(BE_QUIET)
@@ -601,7 +598,7 @@ ifdef PLAT_DARWIN
 	export MACOSX_DEPLOYMENT_TARGET=10.5 && CXXFLAGS="-fvisibility=hidden" cmake \
 	-DCMAKE_INSTALL_PREFIX=$(DEFAULT_PREFIX) -DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_SHARED_LIBS=FALSE \
-	-DCGAL_CXX_FLAGS="-isysroot /Developer/SDKs/MacOSX10.5.sdk -arch i386 -I$(DEFAULT_INCDIR)" \
+	-DCGAL_CXX_FLAGS="-isysroot /Developer/SDKs/MacOSX10.5.sdk -arch x86_64 -arch i386 -arch ppc -I$(DEFAULT_INCDIR)" \
 	-DCGAL_MODULE_LINKER_FLAGS="-L$(DEFAULT_LIBDIR)" \
 	-DCGAL_SHARED_LINKER_FLAGS="-L$(DEFAULT_LIBDIR)" \
 	-DCGAL_EXE_LINKER_FLAGS="-L$(DEFAULT_LIBDIR)" \
@@ -613,8 +610,6 @@ ifdef PLAT_DARWIN
 	-DMPFR_INCLUDE_DIR=$(DEFAULT_INCDIR) \
 	-DMPFR_LIBRARIES_DIR=$(DEFAULT_LIBDIR) \
 	-DMPFR_LIBRARIES=$(DEFAULT_LIBDIR)/libmpfr.a \
-	-DCMAKE_CXX_COMPILER=/usr/bin/g++-4.2 \
-	-DCMAKE_C_COMPILER=/usr/bin/gcc-4.2 \
 	-DWITH_CGAL_ImageIO=OFF -DWITH_CGAL_PDB=OFF -DWITH_CGAL_Qt3=OFF \
 	-DWITH_CGAL_Qt4=OFF $(BE_QUIET) . && \
 	make $(BE_QUIET) && make install $(BE_QUIET)
