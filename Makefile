@@ -18,7 +18,7 @@ VER_LIB3DS	:= 1.3.0
 VER_LIBDIME	:= r175
 # http://www.ijg.org/
 # http://www.ijg.org/files/
-VER_LIBJPEG	:= 7
+VER_LIBJPEG	:= 9a
 # http://www.sqlite.org/
 # http://www.sqlite.org/download.html ; use amalgamation tarball
 VER_LIBSQLITE	:= 3.6.21
@@ -515,9 +515,6 @@ libjpeg: ./local$(MULTI_SUFFIX)/lib/.xpt_libjpeg
 	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
 	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
 	@tar -xzf "./archives/$(ARCHIVE_LIBJPEG)"
-	@cp patches/0001-libjpeg-fix-boolean-type-width.patch \
-	"jpeg-$(VER_LIBJPEG)" && cd "jpeg-$(VER_LIBJPEG)" && \
-	patch -p1 < ./0001-libjpeg-fix-boolean-type-width.patch $(BE_QUIET)
 	@cd "jpeg-$(VER_LIBJPEG)" && \
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_LIBJPEG) LDFLAGS=$(LDFLAGS_LIBJPEG) CC=$(CC_LIBJPEG) \
