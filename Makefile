@@ -2,7 +2,7 @@ BE_QUIET	:= > /dev/null 2>&1
 
 # http://www.cgal.org/
 # http://gforge.inria.fr/frs/?group_id=52
-VER_CGAL	:= 4.5.2
+VER_CGAL	:= 4.10
 # http://www.freetype.org/
 # http://sourceforge.net/projects/freetype/files/
 VER_FREETYPE	:= 2.3.11
@@ -104,7 +104,7 @@ DEFAULT_INCDIR		:= "$(DEFAULT_PREFIX)/include"
 ifeq ($(PLATFORM), Darwin)
 	PLAT_DARWIN := Yes
 	# Ben removed ppc and x86_64 to fix libgmp compilation
-	DEFAULT_MACARGS	:= -isysroot /Developer/SDKs/MacOSX10.6.sdk -mmacosx-version-min=10.6 -arch i386
+	DEFAULT_MACARGS	:= -mmacosx-version-min=10.6 -arch x86_64
 	VIS	:= -fvisibility=hidden
 endif
 ifeq ($(PLATFORM), Linux)
@@ -158,12 +158,18 @@ CONF_LIBMPFR		+= --disable-dependency-tracking
 ifdef PLAT_MINGW
 CONF_LIBMPFR		+= --host=$(CROSSHOST)
 endif
+ifdef PLAT_LINUX
+CONF_LIBMPFR		+= --libdir=$(DEFAULT_LIBDIR)
+endif
 
 # libexpat
 ARCHIVE_LIBEXPAT	:= expat-$(VER_LIBEXPAT).tar.gz
 CFLAGS_LIBEXPAT		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
 LDFLAGS_LIBEXPAT	:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_LIBEXPAT		:= --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_LINUX
+CONF_LIBEXPAT		+= --libdir=$(DEFAULT_LIBDIR)
+endif
 CONF_LIBEXPAT		+= --enable-shared=no
 ifdef PLAT_MINGW
 CONF_LIBEXPAT		+= --host=$(CROSSHOST)
@@ -174,6 +180,9 @@ ARCHIVE_LIBPNG		:= libpng-$(VER_LIBPNG).tar.gz
 CFLAGS_LIBPNG		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH)"
 LDFLAGS_LIBPNG		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_LIBPNG		:= --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_LINUX
+CONF_LIBPNG		+= --libdir=$(DEFAULT_LIBDIR)
+endif
 CONF_LIBPNG		+= --enable-shared=no
 CONF_LIBPNG		+= --enable-maintainer-mode
 CONF_LIBPNG		+= --disable-dependency-tracking
@@ -182,11 +191,15 @@ ifdef PLAT_MINGW
 CONF_LIBPNG		+= --host=$(CROSSHOST)
 endif
 
+
 # freetype
 ARCHIVE_FREETYPE	:= freetype-$(VER_FREETYPE).tar.gz
 CFLAGS_FREETYPE		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
 LDFLAGS_FREETYPE	:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_FREETYPE		:= --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_LINUX
+CONF_FREETYPE		+= --libdir=$(DEFAULT_LIBDIR)
+endif
 CONF_FREETYPE		+= --enable-shared=no
 CONF_FREETYPE		+= --with-zlib
 ifdef PLAT_MINGW
@@ -199,6 +212,9 @@ CC_LIBJPEG		:= "$(CROSSPREFIX)gcc"
 CFLAGS_LIBJPEG		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
 LDFLAGS_LIBJPEG		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_LIBJPEG		:= --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_LINUX
+CONF_LIBJPEG		+= --libdir=$(DEFAULT_LIBDIR)
+endif
 CONF_LIBJPEG		+= --disable-dependency-tracking
 CONF_LIBJPEG		+= --enable-shared=no
 ifdef PLAT_MINGW
@@ -215,6 +231,9 @@ CFLAGS_LIBTIFF		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(V
 endif
 LDFLAGS_LIBTIFF		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_LIBTIFF		:= --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_LINUX
+CONF_LIBTIFF		+= --libdir=$(DEFAULT_LIBDIR)
+endif
 CONF_LIBTIFF		+= --enable-shared=no
 CONF_LIBTIFF		+= --enable-maintainer-mode
 CONF_LIBTIFF		+= --disable-dependency-tracking
@@ -232,6 +251,9 @@ ARCHIVE_LIBPROJ		:= proj-$(VER_LIBPROJ).tar.gz
 CFLAGS_LIBPROJ		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
 LDFLAGS_LIBPROJ		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_LIBPROJ		:= --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_LINUX
+CONF_LIBPROJ		+= --libdir=$(DEFAULT_LIBDIR)
+endif
 CONF_LIBPROJ		+= --enable-shared=no
 CONF_LIBPROJ		+= --disable-dependency-tracking
 CONF_LIBPROJ		+= CCDEPMODE="depmode=none"
@@ -247,6 +269,9 @@ LD_GEOTIFF		:= "$(CROSSPREFIX)ld"
 CFLAGS_GEOTIFF		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
 LDFLAGS_GEOTIFF		:= $(M32_SWITCH) -L$(DEFAULT_LIBDIR)
 CONF_GEOTIFF		:= --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_LINUX
+CONF_GEOTIFF		+= --libdir=$(DEFAULT_LIBDIR)
+endif
 CONF_GEOTIFF		+= --enable-shared=no
 CONF_GEOTIFF		+= --without-ld-shared
 CONF_GEOTIFF		+= --with-zip=$(DEFAULT_PREFIX)
@@ -263,6 +288,9 @@ ARCHIVE_LIBSQLITE	:= sqlite-amalgamation-$(VER_LIBSQLITE).tar.gz
 CFLAGS_LIBSQLITE	:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
 LDFLAGS_LIBSQLITE	:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_LIBSQLITE		:= --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_LINUX
+CONF_LIBSQLITE		+= --libdir=$(DEFAULT_LIBDIR)
+endif
 CONF_LIBSQLITE		+= --enable-shared=no
 CONF_LIBSQLITE		+= --disable-dependency-tracking
 ifdef PLAT_MINGW
@@ -274,6 +302,9 @@ ARCHIVE_LIB3DS		:= lib3ds-$(VER_LIB3DS).tar.gz
 CFLAGS_LIB3DS		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
 LDFLAGS_LIB3DS		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_LIB3DS		:= --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_LINUX
+CONF_LIB3DS		+= --libdir=$(DEFAULT_LIBDIR)
+endif
 CONF_LIB3DS		+= --enable-shared=no
 CONF_LIB3DS		+= --enable-maintainer-mode
 CONF_LIB3DS		+= --disable-dependency-tracking
@@ -283,7 +314,7 @@ CONF_LIB3DS		+= --host=$(CROSSHOST)
 endif
 
 # libcgal
-ARCHIVE_CGAL		:= CGAL-$(VER_CGAL).tar.gz
+ARCHIVE_CGAL		:= CGAL-$(VER_CGAL).tar.xz
 
 
 # libsquish
@@ -297,6 +328,9 @@ ARCHIVE_LIBDIME		:= dime-$(VER_LIBDIME).tar.gz
 CFLAGS_LIBDIME		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
 LDFLAGS_LIBDIME		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_LIBDIME		:= --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_LINUX
+CONF_LIBDIME		+= --libdir=$(DEFAULT_LIBDIR)
+endif
 CONF_LIBDIME		+= --enable-static=yes
 CONF_LIBDIME		+= --enable-shared=no
 CONF_LIBDIME		+= --disable-dependency-tracking
@@ -315,7 +349,7 @@ CONF_LIBSHP		+= cross=$(M32_SWITCH)
 ARCHIVE_LIBSSL		:= openssl-$(VER_LIBSSL).tar.gz
 CONF_LIBSSL			:= --openssldir=$(DEFAULT_PREFIX)
 ifdef PLAT_DARWIN
-CONF_LIBSSL			+= darwin-i386-cc
+CONF_LIBSSL			+= darwin64-x86_64-cc
 endif
 ifdef PLAT_MINGW
 CONF_LIBSSL			+= mingw
@@ -327,12 +361,11 @@ endif
 # libcurl
 ARCHIVE_LIBCURL		:= curl-$(VER_LIBCURL).tar.gz
 CFLAGS_LIBCURL		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-ifdef PLAT_LINUX
 LDFLAGS_LIBCURL		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
-else
-LDFLAGS_LIBCURL		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH) -Wl,-search_paths_first"
-endif
 CONF_LIBCURL		:= --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_LINUX
+CONF_LIBCURL		+= --libdir=$(DEFAULT_LIBDIR)
+endif
 CONF_LIBCURL		+= --enable-shared=no
 CONF_LIBCURL		+= --with-ssl=$(DEFAULT_PREFIX) --without-libidn --disable-ldap
 CONF_LIBCURL		+= --disable-dependency-tracking
@@ -342,12 +375,11 @@ CONF_LIBCURL		+= "LIBS=-ldl"
 # geojasper
 ARCHIVE_LIBJASPER	:= jasper-$(VER_GEOJASPER).tar.gz
 CFLAGS_LIBJASPER	:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-ifdef PLAT_LINUX
 LDFLAGS_LIBJASPER	:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
-else
-LDFLAGS_LIBJASPER	:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH) -Wl,-search_paths_first"
+CONF_LIBJASPER		:= --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_LINUX
+CONF_LIBJASPER		+= --libdir=$(DEFAULT_LIBDIR)
 endif
-CONF_LIBJASPER		:= --prefix=$(DEFAULT_PREFIX) 
 CONF_LIBJASPER		+= --disable-libjpeg 
 #since jpeg is not compiled in libjasper we have to provide a lib for geojasper-bin 
 CONF_LIBJASPER		+= "LIBS=-ljpeg" 
@@ -356,7 +388,6 @@ CONF_LIBJASPER		+= "LIBS=-ljpeg"
 ifeq ($(PLATFORM), Darwin)
 	AR_ZLIB			:= "libtool -static -o"
 	CONF_LIBTIFF		+= --with-apple-opengl-framework
-	LDFLAGS_GEOTIFF     	+= -Z
 endif
 ifeq ($(PLATFORM), Mingw)
 endif
@@ -388,8 +419,8 @@ ifdef PLAT_DARWIN
 	@cd "boost_$(VER_BOOST)" && \
 	chmod +x bootstrap.sh && \
 	./bootstrap.sh --prefix=$(DEFAULT_PREFIX) --with-libraries=thread \
-	--libdir=$(DEFAULT_PREFIX)/lib $(BE_QUIET) && \
-	./bjam cxxflags="$(VIS) $(DEFAULT_MACARGS)" $(BE_QUIET) && \
+	--libdir=$(DEFAULT_PREFIX)/lib cxxflags="$(VIS) $(DEFAULT_MACARGS)" $(BE_QUIET) && \
+	./bjam link=static cxxflags="$(VIS) $(DEFAULT_MACARGS)" $(BE_QUIET) && \
 	./bjam install $(BE_QUIET)
 	@cd local/lib && \
 	rm -f *.dylib*
@@ -635,13 +666,13 @@ libcgal: ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal
 	@echo "building libcgal..."
 	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
 	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
-	@tar -xzf "./archives/$(ARCHIVE_CGAL)"
+	@tar -xf "./archives/$(ARCHIVE_CGAL)"
 ifdef PLAT_DARWIN
 	@cd "CGAL-$(VER_CGAL)" && \
 	export MACOSX_DEPLOYMENT_TARGET=10.6 && CXXFLAGS="-fvisibility=hidden" cmake \
 	-DCMAKE_INSTALL_PREFIX=$(DEFAULT_PREFIX) -DCMAKE_BUILD_TYPE=Release \
 	-DBUILD_SHARED_LIBS=FALSE \
-	-DCGAL_CXX_FLAGS="-isysroot /Developer/SDKs/MacOSX10.6.sdk -arch i386 -I$(DEFAULT_INCDIR)" \
+	-DCGAL_CXX_FLAGS="-arch x86_64 -I$(DEFAULT_INCDIR)" \
 	-DCGAL_MODULE_LINKER_FLAGS="-L$(DEFAULT_LIBDIR)" \
 	-DCGAL_SHARED_LINKER_FLAGS="-L$(DEFAULT_LIBDIR)" \
 	-DCGAL_EXE_LINKER_FLAGS="-L$(DEFAULT_LIBDIR)" \
@@ -663,6 +694,7 @@ ifdef PLAT_LINUX
 	@cd "CGAL-$(VER_CGAL)" && \
 	cmake . -DCMAKE_INSTALL_PREFIX=$(DEFAULT_PREFIX) \
 	-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=FALSE \
+	-DCMAKE_INSTALL_LIBDIR=lib \
 	-DCGAL_CXX_FLAGS="$(VIS) -I$(DEFAULT_INCDIR)" \
 	-DCGAL_MODULE_LINKER_FLAGS="-L$(DEFAULT_LIBDIR)" \
 	-DCGAL_SHARED_LINKER_FLAGS="-L$(DEFAULT_LIBDIR)" \
@@ -676,7 +708,8 @@ ifdef PLAT_LINUX
 	-DMPFR_LIBRARIES_DIR=$(DEFAULT_LIBDIR) \
 	-DMPFR_LIBRARIES=$(DEFAULT_LIBDIR)/libmpfr.a \
 	-DWITH_CGAL_ImageIO=OFF -DWITH_CGAL_PDB=OFF -DWITH_CGAL_Qt3=OFF \
-	-DWITH_CGAL_Qt4=OFF -DBoost_INCLUDE_DIR=$(DEFAULT_PREFIX)/include \
+	-DWITH_CGAL_Qt4=OFF -DWITH_CGAL_Qt5=OFF \
+	-DBoost_INCLUDE_DIR=$(DEFAULT_PREFIX)/include \
 	-DBOOST_ROOT=$(DEFAULT_PREFIX) $(BE_QUIET) && \
 	make $(BE_QUIET) && make install $(BE_QUIET)
 endif
@@ -757,6 +790,7 @@ endif
 	@cd "curl-$(VER_LIBCURL)" && \
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_LIBCURL) LDFLAGS=$(LDFLAGS_LIBCURL) \
+	env PKG_CONFIG_PATH=$(DEFAULT_LIBDIR)/pkgconfig \
 	./configure $(CONF_LIBCURL) $(BE_QUIET)
 	@$(MAKE) -C "curl-$(VER_LIBCURL)" $(BE_QUIET)
 	@$(MAKE) -C "curl-$(VER_LIBCURL)" install $(BE_QUIET)
