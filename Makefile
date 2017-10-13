@@ -9,7 +9,7 @@ VER_FREETYPE	:= 2.3.11
 # http://trac.osgeo.org/proj/
 VER_LIBPROJ	:= 4.7.0
 # http://trac.osgeo.org/geotiff/
-VER_GEOTIFF	:= 1.2.5
+VER_GEOTIFF	:= 1.4.2
 # http://www.lib3ds.org/; TODO: new release 2.0, has API changes
 VER_LIB3DS	:= 1.3.0
 # http://www.coin3d.org/lib/dime; no releases yet
@@ -97,7 +97,7 @@ else
 endif
 endif
 
-DEFAULT_PREFIX		:= "`pwd`/../local"$(MULTI_SUFFIX)
+DEFAULT_PREFIX		:= $(abspath `pwd`/../local$(MULTI_SUFFIX))
 DEFAULT_LIBDIR		:= "$(DEFAULT_PREFIX)/lib"
 DEFAULT_INCDIR		:= "$(DEFAULT_PREFIX)/include"
 
@@ -233,6 +233,8 @@ LDFLAGS_LIBTIFF		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_LIBTIFF		:= --prefix=$(DEFAULT_PREFIX)
 ifdef PLAT_LINUX
 CONF_LIBTIFF		+= --libdir=$(DEFAULT_LIBDIR)
+CONF_LIBTIFF            += --disable-lzma
+CONF_LIBTIFF            += --disable-jbig
 endif
 CONF_LIBTIFF		+= --enable-shared=no
 CONF_LIBTIFF		+= --enable-maintainer-mode
@@ -273,7 +275,7 @@ ifdef PLAT_LINUX
 CONF_GEOTIFF		+= --libdir=$(DEFAULT_LIBDIR)
 endif
 CONF_GEOTIFF		+= --enable-shared=no
-CONF_GEOTIFF		+= --without-ld-shared
+CONF_GEOTIFF		+= --enable-incode-epsg
 CONF_GEOTIFF		+= --with-zip=$(DEFAULT_PREFIX)
 CONF_GEOTIFF		+= --with-jpeg=$(DEFAULT_PREFIX)
 CONF_GEOTIFF		+= --with-libtiff=$(DEFAULT_PREFIX)
