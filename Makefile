@@ -1,5 +1,7 @@
 BE_QUIET	:= > /dev/null 2>&1
 
+# https://cmake.org/files/v3.0/
+VER_CMAKE	:= 3.0.2
 # http://www.cgal.org/
 # http://gforge.inria.fr/frs/?group_id=52
 VER_CGAL	:= 4.5.2
@@ -112,6 +114,10 @@ ifeq ($(PLATFORM), Linux)
 	VIS	:= -fvisibility=hidden
 endif
 
+# cmake
+ARCHIVE_CMAKE		:= cmake-$(VER_CMAKE).tar.gz
+CONF_CMAKE		:= --prefix=$(DEFAULT_PREFIX)
+
 # boost
 ARCHIVE_BOOST		:= boost_$(VER_BOOST).tar.gz
 
@@ -218,6 +224,8 @@ CONF_LIBTIFF		:= --prefix=$(DEFAULT_PREFIX)
 CONF_LIBTIFF		+= --enable-shared=no
 CONF_LIBTIFF		+= --enable-maintainer-mode
 CONF_LIBTIFF		+= --disable-dependency-tracking
+CONF_LIBTIFF		+= --disable-lzma
+CONF_LIBTIFF		+= --disable-jbig
 CONF_LIBTIFF		+= --with-jpeg-include-dir=$(DEFAULT_INCDIR)
 CONF_LIBTIFF		+= --with-jpeg-lib-dir=$(DEFAULT_LIBDIR)
 CONF_LIBTIFF		+= --with-zlib-include-dir=$(DEFAULT_INCDIR)
@@ -253,6 +261,7 @@ CONF_GEOTIFF		+= --with-zip=$(DEFAULT_PREFIX)
 CONF_GEOTIFF		+= --with-jpeg=$(DEFAULT_PREFIX)
 CONF_GEOTIFF		+= --with-libtiff=$(DEFAULT_PREFIX)
 CONF_GEOTIFF		+= --with-proj=$(DEFAULT_PREFIX)
+CONF_GEOTIFF		+= --enable-incode-epsg
 ifdef PLAT_MINGW
 CONF_GEOTIFF		+= --host=$(CROSSHOST)
 CONF_GEOTIFF		+= --target=$(CROSSHOST)
@@ -379,6 +388,18 @@ clean:
 	@-rm -rf ./local
 	@-rm -rf ./local32
 	@-rm -rf ./local64
+
+cmake: ./local$(MULTI_SUFFIX)/bin/.xpt_cmake
+./local$(MULTI_SUFFIX)/bin/.xpt_cmake:
+	@echo "building cmake..."
+	@tar -xzf "./archives/$(ARCHIVE_CMAKE)"
+	@cd "cmake-$(VER_CMAKE)" && \
+	chmod +x bootstrap && \
+	./bootstrap --prefix=$(DEFAULT_PREFIX) $(BE_QUIET)
+	@$(MAKE) -C "cmake-$(VER_CMAKE)" $(BE_QUIET) 
+	@$(MAKE) -C "cmake-$(VER_CMAKE)" install $(BE_QUIET)
+	@-rm -rf cmake-$(VER_CMAKE)
+	@touch $@
 
 boost: ./local$(MULTI_SUFFIX)/lib/.xpt_boost
 ./local$(MULTI_SUFFIX)/lib/.xpt_boost:
@@ -628,6 +649,7 @@ libsquish: ./local$(MULTI_SUFFIX)/lib/.xpt_libsquish
 
 libcgal: ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal
 ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal: \
+./local$(MULTI_SUFFIX)/bin/.xpt_cmake \
 ./local$(MULTI_SUFFIX)/lib/.xpt_zlib \
 ./local$(MULTI_SUFFIX)/lib/.xpt_libgmp \
 ./local$(MULTI_SUFFIX)/lib/.xpt_libmpfr \
@@ -661,7 +683,7 @@ ifdef PLAT_DARWIN
 endif
 ifdef PLAT_LINUX
 	@cd "CGAL-$(VER_CGAL)" && \
-	cmake . -DCMAKE_INSTALL_PREFIX=$(DEFAULT_PREFIX) \
+	$(DEFAULT_PREFIX)/bin/cmake . -DCMAKE_INSTALL_PREFIX=$(DEFAULT_PREFIX) \
 	-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=FALSE \
 	-DCGAL_CXX_FLAGS="$(VIS) -I$(DEFAULT_INCDIR)" \
 	-DCGAL_MODULE_LINKER_FLAGS="-L$(DEFAULT_LIBDIR)" \
