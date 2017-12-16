@@ -11,7 +11,7 @@ VER_FREETYPE	:= 2.3.11
 # http://trac.osgeo.org/proj/
 VER_LIBPROJ	:= 4.7.0
 # http://trac.osgeo.org/geotiff/
-VER_GEOTIFF	:= 1.2.5
+VER_GEOTIFF	:= 1.4.2
 # http://www.lib3ds.org/; TODO: new release 2.0, has API changes
 VER_LIB3DS	:= 1.3.0
 # http://www.coin3d.org/lib/dime; no releases yet
@@ -99,14 +99,14 @@ else
 endif
 endif
 
-DEFAULT_PREFIX		:= "`pwd`/../local"$(MULTI_SUFFIX)
-DEFAULT_LIBDIR		:= "$(DEFAULT_PREFIX)/lib"
-DEFAULT_INCDIR		:= "$(DEFAULT_PREFIX)/include"
+DEFAULT_PREFIX		:= $(CURDIR)/local$(MULTI_SUFFIX)
+DEFAULT_LIBDIR		:= $(DEFAULT_PREFIX)/lib
+DEFAULT_INCDIR		:= $(DEFAULT_PREFIX)/include
 
 ifeq ($(PLATFORM), Darwin)
 	PLAT_DARWIN := Yes
 	# Ben removed ppc and x86_64 to fix libgmp compilation
-	DEFAULT_MACARGS	:= -isysroot /Developer/SDKs/MacOSX10.6.sdk -mmacosx-version-min=10.6 -arch i386
+	DEFAULT_MACARGS	:= -mmacosx-version-min=10.6
 	VIS	:= -fvisibility=hidden
 endif
 ifeq ($(PLATFORM), Linux)
@@ -126,7 +126,11 @@ ARCHIVE_MESA		:= mesa-headers-$(VER_MESA).tar.gz
 
 # zlib
 ARCHIVE_ZLIB		:= zlib-$(VER_ZLIB).tar.gz
+ifdef PLAT_DARWIN
+AR_ZLIB			:= "libtool -static -o"
+else
 AR_ZLIB			:= "$(CROSSPREFIX)ar rcs"
+endif
 CC_ZLIB			:= "$(CROSSPREFIX)gcc"
 CFLAGS_ZLIB		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
 LDFLAGS_ZLIB		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
@@ -231,6 +235,9 @@ CONF_LIBTIFF		+= --with-jpeg-lib-dir=$(DEFAULT_LIBDIR)
 CONF_LIBTIFF		+= --with-zlib-include-dir=$(DEFAULT_INCDIR)
 CONF_LIBTIFF		+= --with-zlib-lib-dir=$(DEFAULT_LIBDIR)
 CONF_LIBTIFF		+= CCDEPMODE="depmode=none"
+ifdef PLAT_DARWIN
+CONF_LIBTIFF		+= --with-apple-opengl-framework
+endif
 ifdef PLAT_MINGW
 CONF_LIBTIFF		+= --host=$(CROSSHOST)
 endif
@@ -253,10 +260,9 @@ ARCHIVE_GEOTIFF		:= libgeotiff-$(VER_GEOTIFF).tar.gz
 AR_GEOTIFF		:= "$(CROSSPREFIX)ar"
 LD_GEOTIFF		:= "$(CROSSPREFIX)ld"
 CFLAGS_GEOTIFF		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_GEOTIFF		:= $(M32_SWITCH) -L$(DEFAULT_LIBDIR)
+LDFLAGS_GEOTIFF		:= "$(M32_SWITCH) -L$(DEFAULT_LIBDIR)"
 CONF_GEOTIFF		:= --prefix=$(DEFAULT_PREFIX)
 CONF_GEOTIFF		+= --enable-shared=no
-CONF_GEOTIFF		+= --without-ld-shared
 CONF_GEOTIFF		+= --with-zip=$(DEFAULT_PREFIX)
 CONF_GEOTIFF		+= --with-jpeg=$(DEFAULT_PREFIX)
 CONF_GEOTIFF		+= --with-libtiff=$(DEFAULT_PREFIX)
@@ -294,7 +300,6 @@ endif
 # libcgal
 ARCHIVE_CGAL		:= CGAL-$(VER_CGAL).tar.gz
 
-
 # libsquish
 ARCHIVE_LIBSQUISH	:= squish-$(VER_LIBSQUISH).tar.gz
 CONF_LIBSQUISH		:= INSTALL_DIR=$(DEFAULT_PREFIX)
@@ -322,15 +327,15 @@ CONF_LIBSHP		+= cross=$(M32_SWITCH)
 
 # libssl
 ARCHIVE_LIBSSL		:= openssl-$(VER_LIBSSL).tar.gz
-CONF_LIBSSL			:= --openssldir=$(DEFAULT_PREFIX)
+CONF_LIBSSL		:= --openssldir=$(DEFAULT_PREFIX)
 ifdef PLAT_DARWIN
-CONF_LIBSSL			+= darwin-i386-cc
+CONF_LIBSSL		+= darwin64-x86_64-cc
 endif
 ifdef PLAT_MINGW
-CONF_LIBSSL			+= mingw
+CONF_LIBSSL		+= mingw
 endif
 ifdef PLAT_LINUX
-CONF_LIBSSL			+= linux-x86_64
+CONF_LIBSSL		+= linux-x86_64
 endif
 
 # libcurl
@@ -361,16 +366,6 @@ CONF_LIBJASPER		+= --disable-libjpeg
 #since jpeg is not compiled in libjasper we have to provide a lib for geojasper-bin 
 CONF_LIBJASPER		+= "LIBS=-ljpeg" 
 
-# platform specific tweaks
-ifeq ($(PLATFORM), Darwin)
-	AR_ZLIB			:= "libtool -static -o"
-	CONF_LIBTIFF		+= --with-apple-opengl-framework
-	LDFLAGS_GEOTIFF     	+= -Z
-endif
-ifeq ($(PLATFORM), Mingw)
-endif
-ifeq ($(PLATFORM), Linux)
-endif
 
 # targets
 .PHONY: all clean boost mesa_headers zlib libpng libfreetype libjpeg \
@@ -389,8 +384,8 @@ clean:
 	@-rm -rf ./local32
 	@-rm -rf ./local64
 
-cmake: ./local$(MULTI_SUFFIX)/bin/.xpt_cmake
-./local$(MULTI_SUFFIX)/bin/.xpt_cmake:
+cmake: $(DEFAULT_PREFIX)/bin/cmake
+$(DEFAULT_PREFIX)/bin/cmake:
 	@echo "building cmake..."
 	@tar -xzf "./archives/$(ARCHIVE_CMAKE)"
 	@cd "cmake-$(VER_CMAKE)" && \
@@ -399,7 +394,6 @@ cmake: ./local$(MULTI_SUFFIX)/bin/.xpt_cmake
 	@$(MAKE) -C "cmake-$(VER_CMAKE)" $(BE_QUIET) 
 	@$(MAKE) -C "cmake-$(VER_CMAKE)" install $(BE_QUIET)
 	@-rm -rf cmake-$(VER_CMAKE)
-	@touch $@
 
 boost: ./local$(MULTI_SUFFIX)/lib/.xpt_boost
 ./local$(MULTI_SUFFIX)/lib/.xpt_boost:
@@ -410,7 +404,7 @@ ifdef PLAT_DARWIN
 	chmod +x bootstrap.sh && \
 	./bootstrap.sh --prefix=$(DEFAULT_PREFIX) --with-libraries=thread \
 	--libdir=$(DEFAULT_PREFIX)/lib $(BE_QUIET) && \
-	./bjam cxxflags="$(VIS) $(DEFAULT_MACARGS)" $(BE_QUIET) && \
+	./bjam link=static cxxflags="$(VIS) $(DEFAULT_MACARGS)" $(BE_QUIET) && \
 	./bjam install $(BE_QUIET)
 	@cd local/lib && \
 	rm -f *.dylib*
@@ -591,11 +585,11 @@ libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff
 	@patch -p0 <patches/0001-libgeotiff-1.4.2-incode.patch
 	@cd "libgeotiff-$(VER_GEOTIFF)" && \
 	chmod +x configure && \
-	CFLAGS=$(CFLAGS_GEOTIFF) LDFLAGS="$(LDFLAGS_GEOTIFF)" \
-	LD_SHARED="$(LD_GEOTIFF)" AR="$(AR_GEOTIFF)" \
+	CFLAGS=$(CFLAGS_GEOTIFF) LDFLAGS=$(LDFLAGS_GEOTIFF) \
+	LD_SHARED=$(LD_GEOTIFF) AR=$(AR_GEOTIFF) \
 	./configure $(CONF_GEOTIFF) $(BE_QUIET)
-	-@$(MAKE) -C "libgeotiff-$(VER_GEOTIFF)" -j1 $(BE_QUIET)
-	-@$(MAKE) -C "libgeotiff-$(VER_GEOTIFF)" install -j1 $(BE_QUIET)
+	@$(MAKE) -C "libgeotiff-$(VER_GEOTIFF)" -j1 $(BE_QUIET)
+	@$(MAKE) -C "libgeotiff-$(VER_GEOTIFF)" install -j1 $(BE_QUIET)
 	@-rm -rf libgeotiff-$(VER_GEOTIFF)
 	@-rm -rf ./local/lib/libgeotiff.so*
 	@touch $@
@@ -650,7 +644,7 @@ libsquish: ./local$(MULTI_SUFFIX)/lib/.xpt_libsquish
 
 libcgal: ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal
 ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal: \
-./local$(MULTI_SUFFIX)/bin/.xpt_cmake \
+$(DEFAULT_PREFIX)/bin/cmake \
 ./local$(MULTI_SUFFIX)/lib/.xpt_zlib \
 ./local$(MULTI_SUFFIX)/lib/.xpt_libgmp \
 ./local$(MULTI_SUFFIX)/lib/.xpt_libmpfr \
@@ -659,31 +653,9 @@ libcgal: ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal
 	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
 	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
 	@tar -xzf "./archives/$(ARCHIVE_CGAL)"
-ifdef PLAT_DARWIN
+ifndef PLAT_MINGW
 	@cd "CGAL-$(VER_CGAL)" && \
-	export MACOSX_DEPLOYMENT_TARGET=10.6 && CXXFLAGS="-fvisibility=hidden" cmake \
-	-DCMAKE_INSTALL_PREFIX=$(DEFAULT_PREFIX) -DCMAKE_BUILD_TYPE=Release \
-	-DBUILD_SHARED_LIBS=FALSE \
-	-DCGAL_CXX_FLAGS="-isysroot /Developer/SDKs/MacOSX10.6.sdk -arch i386 -I$(DEFAULT_INCDIR)" \
-	-DCGAL_MODULE_LINKER_FLAGS="-L$(DEFAULT_LIBDIR)" \
-	-DCGAL_SHARED_LINKER_FLAGS="-L$(DEFAULT_LIBDIR)" \
-	-DCGAL_EXE_LINKER_FLAGS="-L$(DEFAULT_LIBDIR)" \
-	-DGMP_INCLUDE_DIR=$(DEFAULT_INCDIR) \
-	-DGMP_LIBRARIES_DIR=$(DEFAULT_LIBDIR) \
-	-DGMP_LIBRARIES=$(DEFAULT_LIBDIR)/libgmp.a \
-	-DGMPXX_INCLUDE_DIR=$(DEFAULT_INCDIR) \
-	-DGMPXX_LIBRARIES=$(DEFAULT_LIBDIR)/libgmpxx.a \
-	-DMPFR_INCLUDE_DIR=$(DEFAULT_INCDIR) \
-	-DMPFR_LIBRARIES_DIR=$(DEFAULT_LIBDIR) \
-	-DMPFR_LIBRARIES=$(DEFAULT_LIBDIR)/libmpfr.a \
-	-DCMAKE_CXX_COMPILER=/usr/bin/g++ \
-	-DCMAKE_C_COMPILER=/usr/bin/gcc \
-	-DWITH_CGAL_ImageIO=OFF -DWITH_CGAL_PDB=OFF -DWITH_CGAL_Qt3=OFF \
-	-DWITH_CGAL_Qt4=OFF $(BE_QUIET) . && \
-	make $(BE_QUIET) && make install $(BE_QUIET)
-endif
-ifdef PLAT_LINUX
-	@cd "CGAL-$(VER_CGAL)" && \
+	export MACOSX_DEPLOYMENT_TARGET=10.6 && \
 	$(DEFAULT_PREFIX)/bin/cmake . -DCMAKE_INSTALL_PREFIX=$(DEFAULT_PREFIX) \
 	-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=FALSE \
 	-DCGAL_CXX_FLAGS="$(VIS) -I$(DEFAULT_INCDIR)" \
@@ -702,8 +674,7 @@ ifdef PLAT_LINUX
 	-DWITH_CGAL_Qt4=OFF -DBoost_INCLUDE_DIR=$(DEFAULT_PREFIX)/include \
 	-DBOOST_ROOT=$(DEFAULT_PREFIX) $(BE_QUIET) && \
 	make $(BE_QUIET) && make install $(BE_QUIET)
-endif
-ifdef PLAT_MINGW
+else
 	@cd "CGAL-$(VER_CGAL)" && \
 	cmake -G "MSYS Makefiles" . -DCMAKE_INSTALL_PREFIX=$(DEFAULT_PREFIX) \
 	-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=FALSE \
