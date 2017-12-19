@@ -752,7 +752,9 @@ libssl: ./local$(MULTI_SUFFIX)/lib/.xpt_libssl
 	@cd "openssl-$(VER_LIBSSL)" && \
 	chmod +x Configure && \
 	./Configure $(CONF_LIBSSL) $(BE_QUIET)
-	@cd "openssl-$(VER_LIBSSL)" && make install $(BE_QUIET)
+	@cd "openssl-$(VER_LIBSSL)" && \
+	export MACOSX_DEPLOYMENT_TARGET=10.6 && \
+	$(MAKE) -j1 $(BE_QUIET) && $(MAKE) install_sw $(BE_QUIET)
 	@-rm -rf "openssl-$(VER_LIBSSL)"
 	@touch $@
 
