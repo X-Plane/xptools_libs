@@ -21,9 +21,6 @@ VER_LIBDIME	:= r175
 # http://www.ijg.org/
 # http://www.ijg.org/files/
 VER_LIBJPEG	:= 9a
-# http://www.sqlite.org/
-# http://www.sqlite.org/download.html ; use amalgamation tarball
-VER_LIBSQLITE	:= 3.6.21
 # http://www.libpng.org/
 # http://www.libpng.org/pub/png/libpng.html
 VER_LIBPNG	:= 1.2.41
@@ -60,8 +57,6 @@ VER_LIBCURL := 7.36.0
 # http://http://www.openssl.org/
 # https://www.openssl.org/source/
 VER_LIBSSL := 1.0.1l
-# http://www.dimin.net/software/geojasper/
-VER_GEOJASPER := 1.701.0.GEO
 
 ARCHITECTURE	:= $(shell uname -m)
 PLATFORM	:= $(shell uname)
@@ -106,7 +101,7 @@ DEFAULT_INCDIR		:= $(DEFAULT_PREFIX)/include
 ifeq ($(PLATFORM), Darwin)
 	PLAT_DARWIN := Yes
 	# Ben removed ppc and x86_64 to fix libgmp compilation
-	DEFAULT_MACARGS	:= -mmacosx-version-min=10.6
+	DEFAULT_MACARGS	:= -mmacosx-version-min=10.9
 	VIS	:= -fvisibility=hidden
 endif
 ifeq ($(PLATFORM), Linux)
@@ -281,18 +276,6 @@ CONF_GEOTIFF		+= --host=$(CROSSHOST)
 CONF_GEOTIFF		+= --target=$(CROSSHOST)
 endif
 
-# sqlite
-ARCHIVE_LIBSQLITE	:= sqlite-amalgamation-$(VER_LIBSQLITE).tar.gz
-CFLAGS_LIBSQLITE	:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_LIBSQLITE	:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
-CONF_LIBSQLITE		:= --prefix=$(DEFAULT_PREFIX)
-CONF_LIBSQLITE		+= --libdir=$(DEFAULT_LIBDIR)
-CONF_LIBSQLITE		+= --enable-shared=no
-CONF_LIBSQLITE		+= --disable-dependency-tracking
-ifdef PLAT_MINGW
-CONF_LIBSQLITE		+= --host=$(CROSSHOST)
-endif
-
 # lib3ds
 ARCHIVE_LIB3DS		:= lib3ds-$(VER_LIB3DS).tar.gz
 CFLAGS_LIB3DS		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
@@ -388,30 +371,15 @@ CONF_LIBCURL		+= --disable-dependency-tracking
 CONF_LIBCURL		+= --without-librtmp --without-ca-path --enable-hidden-symbols
 CONF_LIBCURL		+= "LIBS=-ldl"
 
-# geojasper
-ARCHIVE_LIBJASPER	:= jasper-$(VER_GEOJASPER).tar.gz
-CFLAGS_LIBJASPER	:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-ifdef PLAT_LINUX
-LDFLAGS_LIBJASPER	:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
-else
-LDFLAGS_LIBJASPER	:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH) -Wl,-search_paths_first"
-endif
-CONF_LIBJASPER		:= --prefix=$(DEFAULT_PREFIX) 
-CONF_LIBJASPER		+= --libdir=$(DEFAULT_LIBDIR)
-CONF_LIBJASPER		+= --disable-libjpeg 
-#since jpeg is not compiled in libjasper we have to provide a lib for geojasper-bin 
-CONF_LIBJASPER		+= "LIBS=-ljpeg" 
-
-
 # targets
 .PHONY: all clean boost mesa_headers zlib libpng libfreetype libjpeg \
-libtiff libproj libgeotiff libsqlite lib3ds libcgal libsquish libdime libshp \
-libexpat libgmp libmpfr libssl libcurl libjasper
+libtiff libproj libgeotiff lib3ds libcgal libsquish libdime libshp \
+libexpat libgmp libmpfr libssl libcurl
 
 all: ./local$(MULTI_SUFFIX)/.xpt_libs
 ./local$(MULTI_SUFFIX)/.xpt_libs: boost mesa_headers zlib libpng \
-libfreetype libjpeg libtiff libproj libgeotiff libsqlite lib3ds libcgal \
-libsquish libdime libshp libexpat libgmp libmpfr libssl libcurl libjasper
+libfreetype libjpeg libtiff libproj libgeotiff lib3ds libcgal \
+libsquish libdime libshp libexpat libgmp libmpfr libssl libcurl
 	@touch ./local$(MULTI_SUFFIX)/.xpt_libs
 	
 clean:
@@ -630,23 +598,6 @@ libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff
 	@-rm -rf ./local/lib/libgeotiff.so*
 	@touch $@
 
-
-libsqlite: ./local$(MULTI_SUFFIX)/lib/.xpt_libsqlite
-./local$(MULTI_SUFFIX)/lib/.xpt_libsqlite:
-	@echo "building libsqlite..."
-	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
-	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
-	@tar -xzf "./archives/$(ARCHIVE_LIBSQLITE)"
-	@cd "sqlite-$(VER_LIBSQLITE)" && \
-	chmod +x configure && \
-	CFLAGS=$(CFLAGS_LIBSQLITE) LDFLAGS=$(LDFLAGS_LIBSQLITE) \
-	./configure $(CONF_LIBSQLITE) $(BE_QUIET)
-	@$(MAKE) -C "sqlite-$(VER_LIBSQLITE)" $(BE_QUIET)
-	@$(MAKE) -C "sqlite-$(VER_LIBSQLITE)" install $(BE_QUIET)
-	@-rm -rf sqlite-$(VER_LIBSQLITE)
-	@touch $@
-
-
 lib3ds: ./local$(MULTI_SUFFIX)/lib/.xpt_lib3ds
 ./local$(MULTI_SUFFIX)/lib/.xpt_lib3ds:
 	@echo "building lib3ds..."
@@ -762,17 +713,4 @@ endif
 	@$(MAKE) -C "curl-$(VER_LIBCURL)" $(BE_QUIET)
 	@$(MAKE) -C "curl-$(VER_LIBCURL)" install $(BE_QUIET)
 	@-rm -rf curl-$(VER_LIBCURL)
-	@touch $@
-
-libjasper: ./local$(MULTI_SUFFIX)/lib/.xpt_libjasper
-./local$(MULTI_SUFFIX)/lib/.xpt_libjasper: ./local$(MULTI_SUFFIX)/lib/.xpt_libjpeg
-	@echo "building libjasper..."
-	@tar -xzf "./archives/$(ARCHIVE_LIBJASPER)"
-	@cd "jasper-$(VER_GEOJASPER)" && \
-	chmod u+x configure && \
-	CFLAGS=$(CFLAGS_LIBJASPER) LDFLAGS=$(LDFLAGS_LIBJASPER) \
-	./configure $(CONF_LIBJASPER) $(BE_QUIET)
-	@$(MAKE) -C "jasper-$(VER_GEOJASPER)" $(BE_QUIET)
-	@$(MAKE) -C "jasper-$(VER_GEOJASPER)" install $(BE_QUIET)
-	@rm -rf "jasper-$(VER_GEOJASPER)"
 	@touch $@
