@@ -313,7 +313,7 @@ CONF_CGAL               += -DBoost_INCLUDE_DIR=$(DEFAULT_PREFIX)/include
 CONF_CGAL               += -DBOOST_ROOT=$(DEFAULT_PREFIX)
 ifdef PLAT_DARWIN
 CONF_CGAL		+= -DCMAKE_OSX_SYSROOT=`xcrun --sdk macosx --show-sdk-path`
-CONF_CGAL               += -DCMAKE_OSX_DEPLOYMENT_TARGET=10.6
+CONF_CGAL               += -DCMAKE_OSX_DEPLOYMENT_TARGET=10.9
 endif
 
 # libsquish
@@ -693,7 +693,7 @@ libssl: ./local$(MULTI_SUFFIX)/lib/.xpt_libssl
 	chmod +x Configure && \
 	./Configure $(CONF_LIBSSL) $(BE_QUIET)
 	@cd "openssl-$(VER_LIBSSL)" && \
-	export MACOSX_DEPLOYMENT_TARGET=10.6 && \
+	export MACOSX_DEPLOYMENT_TARGET=10.9 && \
 	$(MAKE) -j1 $(BE_QUIET) && $(MAKE) install_sw $(BE_QUIET)
 	@-rm -rf "openssl-$(VER_LIBSSL)"
 	@touch $@
