@@ -1,10 +1,8 @@
 #BE_QUIET	:= > /dev/null 2>&1
 
-# https://cmake.org/files/v3.0/
-VER_CMAKE	:= 3.0.2
 # http://www.cgal.org/
 # http://gforge.inria.fr/frs/?group_id=52
-VER_CGAL	:= 4.5.2
+VER_CGAL	:= 4.10
 # http://www.freetype.org/
 # http://sourceforge.net/projects/freetype/files/
 VER_FREETYPE	:= 2.3.11
@@ -108,10 +106,6 @@ ifeq ($(PLATFORM), Linux)
 	PLAT_LINUX := Yes
 	VIS	:= -fvisibility=hidden
 endif
-
-# cmake
-ARCHIVE_CMAKE		:= cmake-$(VER_CMAKE).tar.gz
-CONF_CMAKE		:= --prefix=$(DEFAULT_PREFIX)
 
 # boost
 ARCHIVE_BOOST		:= boost_$(VER_BOOST).tar.gz
@@ -291,7 +285,7 @@ CONF_LIB3DS		+= --host=$(CROSSHOST)
 endif
 
 # libcgal
-ARCHIVE_CGAL		:= CGAL-$(VER_CGAL).tar.gz
+ARCHIVE_CGAL		:= CGAL-$(VER_CGAL).tar.xz
 CONF_CGAL		:= -DCGAL_CXX_FLAGS="$(VIS) -I$(DEFAULT_INCDIR)" 
 CONF_CGAL		+= -DCMAKE_INSTALL_PREFIX=$(DEFAULT_PREFIX)
 CONF_CGAL		+= -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=FALSE
@@ -387,17 +381,6 @@ clean:
 	@-rm -rf ./local
 	@-rm -rf ./local32
 	@-rm -rf ./local64
-
-cmake: $(DEFAULT_PREFIX)/bin/cmake
-$(DEFAULT_PREFIX)/bin/cmake:
-	@echo "building cmake..."
-	@tar -xzf "./archives/$(ARCHIVE_CMAKE)"
-	@cd "cmake-$(VER_CMAKE)" && \
-	chmod +x bootstrap && \
-	./bootstrap --prefix=$(DEFAULT_PREFIX) $(BE_QUIET)
-	@$(MAKE) -C "cmake-$(VER_CMAKE)" $(BE_QUIET) 
-	@$(MAKE) -C "cmake-$(VER_CMAKE)" install $(BE_QUIET)
-	@-rm -rf cmake-$(VER_CMAKE)
 
 boost: ./local$(MULTI_SUFFIX)/lib/.xpt_boost
 ./local$(MULTI_SUFFIX)/lib/.xpt_boost:
@@ -631,7 +614,6 @@ libsquish: ./local$(MULTI_SUFFIX)/lib/.xpt_libsquish
 
 libcgal: ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal
 ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal: \
-$(DEFAULT_PREFIX)/bin/cmake \
 ./local$(MULTI_SUFFIX)/lib/.xpt_zlib \
 ./local$(MULTI_SUFFIX)/lib/.xpt_libgmp \
 ./local$(MULTI_SUFFIX)/lib/.xpt_libmpfr \
@@ -639,16 +621,10 @@ $(DEFAULT_PREFIX)/bin/cmake \
 	@echo "building libcgal..."
 	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
 	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
-	@tar -xzf "./archives/$(ARCHIVE_CGAL)"
-ifndef PLAT_MINGW
+	@tar -xJf "./archives/$(ARCHIVE_CGAL)"
 	@cd "CGAL-$(VER_CGAL)" && \
-	$(DEFAULT_PREFIX)/bin/cmake . $(CONF_CGAL) $(BE_QUIET) && \
+	cmake . $(CONF_CGAL) $(BE_QUIET) && \
 	make $(BE_QUIET) && make install $(BE_QUIET)
-else
-	@cd "CGAL-$(VER_CGAL)" && \
-	cmake -G "MSYS Makefiles" . $(CONF_CGAL) $(BE_QUIET) && \
-	make $(BE_QUIET) && make install $(BE_QUIET)
-endif
 	@-rm -rf CGAL-$(VER_CGAL)
 	@touch $@
 
