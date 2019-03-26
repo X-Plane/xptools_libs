@@ -356,7 +356,7 @@ CFLAGS_LIBCURL		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(V
 ifdef PLAT_LINUX
 LDFLAGS_LIBCURL		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 else
-LDFLAGS_LIBCURL		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH) -Wl,-search_paths_first"
+LDFLAGS_LIBCURL		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH) -Wl,-no_weak_imports,-search_paths_first -Werror=partial-availability"
 endif
 CONF_LIBCURL		:= --prefix=$(DEFAULT_PREFIX)
 CONF_LIBCURL		+= --libdir=$(DEFAULT_LIBDIR)
