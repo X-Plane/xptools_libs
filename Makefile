@@ -1,8 +1,11 @@
 #BE_QUIET	:= > /dev/null 2>&1
 
+# Note: Homebrew is actually a good source for figuring out all the dependencies of CGAL.
+#       It gives the required versions of the packages it needs.
+#       https://formulae.brew.sh/formula/cgal
 # http://www.cgal.org/
-# http://gforge.inria.fr/frs/?group_id=52
-VER_CGAL	:= 4.10
+VER_CGAL	:= 4.14.1
+CGAL_URL    := https://github.com/CGAL/cgal/releases/download/releases%2FCGAL-4.14.1/CGAL-4.14.1.tar.xz
 # http://www.freetype.org/
 # http://sourceforge.net/projects/freetype/files/
 VER_FREETYPE	:= 2.3.11
@@ -34,9 +37,9 @@ VER_LIBSHP	:= 1.2.10
 # http://code.google.com/p/libsquish/downloads/list
 VER_LIBSQUISH	:= 1.10
 # http://www.boost.org/
-# http://sourceforge.net/projects/boost/files/
-VER_BOOST	:= 1_57_0
-BOOST_SHORTVER	:= 1_57
+VER_BOOST	:= 1_71_0
+BOOST_SHORTVER	:= 1_71
+BOOST_URL   := https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz
 # http://www.mesa3d.org/
 # http://sourceforge.net/projects/mesa3d/files/
 VER_MESA	:= 7.5
@@ -45,10 +48,10 @@ VER_MESA	:= 7.5
 VER_LIBEXPAT	:= 2.0.1
 # http://gmplib.org/
 # http://gmplib.org/#DOWNLOAD
-VER_LIBGMP	:= 5.1.3
+VER_LIBGMP	:= 6.1.2
 # http://www.mpfr.org/
 # http://www.mpfr.org/mpfr-current/#download
-VER_LIBMPFR	:= 3.1.2
+VER_LIBMPFR	:= 4.0.2
 # http://curl.haxx.se/
 # http://curl.haxx.se/download.html
 VER_LIBCURL := 7.36.0
@@ -126,7 +129,7 @@ LDFLAGS_ZLIB		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_ZLIB		:= --prefix=$(DEFAULT_PREFIX)
 
 # libgmp
-ARCHIVE_LIBGMP		:= gmp-$(VER_LIBGMP).tar.gz
+ARCHIVE_LIBGMP		:= gmp-$(VER_LIBGMP).tar.xz
 CFLAGS_LIBGMP		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
 CXXFLAGS_LIBGMP		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
 LDFLAGS_LIBGMP		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
@@ -286,7 +289,7 @@ endif
 
 # libcgal
 ARCHIVE_CGAL		:= CGAL-$(VER_CGAL).tar.xz
-CONF_CGAL		:= -DCGAL_CXX_FLAGS="$(VIS) -I$(DEFAULT_INCDIR)" 
+CONF_CGAL		:= -DCGAL_CXX_FLAGS="$(VIS) -I$(DEFAULT_INCDIR)"
 CONF_CGAL		+= -DCMAKE_INSTALL_PREFIX=$(DEFAULT_PREFIX)
 CONF_CGAL		+= -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=FALSE
 CONF_CGAL		+= -DCMAKE_INSTALL_LIBDIR=lib
@@ -303,7 +306,9 @@ CONF_CGAL               += -DMPFR_LIBRARIES_DIR=$(DEFAULT_LIBDIR)
 CONF_CGAL               += -DMPFR_LIBRARIES=$(DEFAULT_LIBDIR)/libmpfr.a
 CONF_CGAL               += -DWITH_CGAL_ImageIO=OFF -DWITH_CGAL_PDB=OFF 
 CONF_CGAL               += -DWITH_CGAL_Qt3=OFF -DWITH_CGAL_Qt4=OFF -DWITH_CGAL_Qt5=OFF
-CONF_CGAL               += -DBoost_INCLUDE_DIR=$(DEFAULT_PREFIX)/include
+CONF_CGAL               += -DBoost_INCLUDE_DIR=$(DEFAULT_INCDIR)
+CONF_CGAL               += -DBOOST_LIBRARYDIR=$(DEFAULT_LIBDIR)
+CONF_CGAL               += -DBOOST_USE_STATIC_LIBS=ON
 CONF_CGAL               += -DBOOST_ROOT=$(DEFAULT_PREFIX)
 ifdef PLAT_DARWIN
 CONF_CGAL		+= -DCMAKE_OSX_SYSROOT=`xcrun --sdk macosx --show-sdk-path`
@@ -385,15 +390,19 @@ clean:
 
 boost: ./local$(MULTI_SUFFIX)/lib/.xpt_boost
 ./local$(MULTI_SUFFIX)/lib/.xpt_boost:
+	@echo "downloading boost..."
+	@curl -Lo "./archives/$(ARCHIVE_BOOST)" "$(BOOST_URL)"
 	@echo "building boost..."
+	@-rm -rf "boost_$(VER_BOOST)"
+	@-mkdir "boost_$(VER_BOOST)"
 	@tar -xzf "./archives/$(ARCHIVE_BOOST)"
 ifdef PLAT_DARWIN
 	@cd "boost_$(VER_BOOST)" && \
 	chmod +x bootstrap.sh && \
-	./bootstrap.sh --prefix=$(DEFAULT_PREFIX) --with-libraries=thread \
+	./bootstrap.sh --prefix=$(DEFAULT_PREFIX) --with-libraries=system,thread \
 	--libdir=$(DEFAULT_PREFIX)/lib $(BE_QUIET) && \
-	./bjam link=static cxxflags="$(VIS) $(DEFAULT_MACARGS)" $(BE_QUIET) && \
-	./bjam install $(BE_QUIET)
+	./b2 link=static cxxflags="$(VIS) $(DEFAULT_MACARGS)" $(BE_QUIET) && \
+	./b2 install $(BE_QUIET)
 	@cd local/lib && \
 	rm -f *.dylib*
 endif
@@ -402,8 +411,8 @@ ifdef PLAT_LINUX
 	chmod +x bootstrap.sh && \
 	./bootstrap.sh --prefix=$(DEFAULT_PREFIX) --with-libraries=thread \
 	--libdir=$(DEFAULT_PREFIX)/lib $(BE_QUIET) && \
-	./bjam cxxflags="$(VIS)" $(BE_QUIET) && \
-	./bjam install $(BE_QUIET)
+	./b2 cxxflags="$(VIS)" $(BE_QUIET) && \
+	./b2 install $(BE_QUIET)
 	@cd local/lib && \
 	rm -f *.so*
 endif
@@ -411,7 +420,7 @@ ifdef PLAT_MINGW
 	@cp patches/0001-boost-tss-mingw.patch "boost_$(VER_BOOST)" && \
 	cd "boost_$(VER_BOOST)" && \
 	patch -p1 < ./0001-boost-tss-mingw.patch $(BE_QUIET) && \
-	bjam.exe install --toolset=gcc --prefix=$(DEFAULT_PREFIX) \
+	b2.exe install --toolset=gcc --prefix=$(DEFAULT_PREFIX) \
 	--libdir=$(DEFAULT_PREFIX)/lib --with-thread $(BE_QUIET)
 	@cd local/include && \
 	ln -sf boost-$(BOOST_SHORTVER)/boost boost $(BE_QUIET) && \
@@ -619,10 +628,14 @@ libcgal: ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal
 ./local$(MULTI_SUFFIX)/lib/.xpt_libgmp \
 ./local$(MULTI_SUFFIX)/lib/.xpt_libmpfr \
 ./local$(MULTI_SUFFIX)/lib/.xpt_boost
+	@echo "downloading CGAL..."
+	@curl -Lo "./archives/$(ARCHIVE_CGAL)" "$(CGAL_URL)"
 	@echo "building libcgal..."
 	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
 	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
-	@tar -xJf "./archives/$(ARCHIVE_CGAL)"
+	@-rm -rf "CGAL-$(VER_CGAL)"
+	@-mkdir "CGAL-$(VER_CGAL)"
+	@tar -xJf "./archives/$(ARCHIVE_CGAL)" -C "CGAL-$(VER_CGAL)" --strip-components=1
 	@cd "CGAL-$(VER_CGAL)" && \
 	cmake . $(CONF_CGAL) $(BE_QUIET) && \
 	make $(BE_QUIET) && make install $(BE_QUIET)

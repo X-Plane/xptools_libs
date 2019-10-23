@@ -3,3 +3,5 @@ local32
 local64
 .directory
 .DS_Store
+archives/boost_*
+archives/CGAL*
