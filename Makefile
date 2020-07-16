@@ -409,7 +409,7 @@ endif
 ifdef PLAT_LINUX
 	@cd "boost_$(VER_BOOST)" && \
 	chmod +x bootstrap.sh && \
-	./bootstrap.sh --prefix=$(DEFAULT_PREFIX) --with-libraries=thread \
+	./bootstrap.sh --prefix=$(DEFAULT_PREFIX) --with-libraries=system,thread \
 	--libdir=$(DEFAULT_PREFIX)/lib $(BE_QUIET) && \
 	./b2 cxxflags="$(VIS)" $(BE_QUIET) && \
 	./b2 install $(BE_QUIET)
