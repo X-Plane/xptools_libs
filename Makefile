@@ -471,7 +471,7 @@ libexpat: ./local$(MULTI_SUFFIX)/lib/.xpt_libexpat
 libgmp: ./local$(MULTI_SUFFIX)/lib/.xpt_libgmp
 ./local$(MULTI_SUFFIX)/lib/.xpt_libgmp:
 	@echo "building libgmp..."
-	@tar -xzf "./archives/$(ARCHIVE_LIBGMP)"
+	@tar -xf "./archives/$(ARCHIVE_LIBGMP)"
 	@cd "gmp-$(VER_LIBGMP)" && \
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_LIBGMP) CXXFLAGS=$(CXXFLAGS_LIBGMP) LDFLAGS=$(LDFLAGS_LIBGMP) \
