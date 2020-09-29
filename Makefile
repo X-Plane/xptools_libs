@@ -689,7 +689,8 @@ libssl: ./local$(MULTI_SUFFIX)/lib/.xpt_libssl
 	@touch $@
 
 libcurl: ./local$(MULTI_SUFFIX)/lib/.xpt_libcurl
-./local$(MULTI_SUFFIX)/lib/.xpt_libcurl:
+./local$(MULTI_SUFFIX)/lib/.xpt_libcurl: \
+./local$(MULTI_SUFFIX)/lib/.xpt_libssl
 	@echo "building libcurl..."
 	@tar -xzf "./archives/$(ARCHIVE_LIBCURL)"
 ifdef PLAT_MINGW
