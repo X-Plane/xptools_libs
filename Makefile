@@ -372,12 +372,12 @@ CONF_LIBCURL		+= --without-librtmp --without-ca-path --enable-hidden-symbols
 CONF_LIBCURL		+= "LIBS=-ldl"
 
 # targets
-.PHONY: all clean boost mesa_headers zlib libpng libfreetype libjpeg \
+.PHONY: all clean directories boost mesa_headers zlib libpng libfreetype libjpeg \
 libtiff libproj libgeotiff lib3ds libcgal libsquish libdime libshp \
 libexpat libgmp libmpfr libssl libcurl
 
 all: ./local$(MULTI_SUFFIX)/.xpt_libs
-./local$(MULTI_SUFFIX)/.xpt_libs: boost mesa_headers zlib libpng \
+./local$(MULTI_SUFFIX)/.xpt_libs: directories boost mesa_headers zlib libpng \
 libfreetype libjpeg libtiff libproj libgeotiff lib3ds libcgal \
 libsquish libdime libshp libexpat libgmp libmpfr libssl libcurl
 	@touch ./local$(MULTI_SUFFIX)/.xpt_libs
@@ -387,6 +387,10 @@ clean:
 	@-rm -rf ./local
 	@-rm -rf ./local32
 	@-rm -rf ./local64
+
+directories:
+	@-mkdir local
+	@-mkdir local/libs
 
 boost: ./local$(MULTI_SUFFIX)/lib/.xpt_boost
 ./local$(MULTI_SUFFIX)/lib/.xpt_boost:
