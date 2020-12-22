@@ -390,7 +390,7 @@ clean:
 
 directories:
 	@-mkdir local
-	@-mkdir local/libs
+	@-mkdir local/lib
 
 boost: ./local$(MULTI_SUFFIX)/lib/.xpt_boost
 ./local$(MULTI_SUFFIX)/lib/.xpt_boost:
