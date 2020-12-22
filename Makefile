@@ -54,10 +54,10 @@ VER_LIBGMP	:= 6.1.2
 VER_LIBMPFR	:= 4.0.2
 # http://curl.haxx.se/
 # http://curl.haxx.se/download.html
-VER_LIBCURL := 7.36.0
+VER_LIBCURL := 7.74.0
 # http://http://www.openssl.org/
 # https://www.openssl.org/source/
-VER_LIBSSL := 1.0.1l
+VER_LIBSSL := 1.1.1i
 
 ARCHITECTURE	:= $(shell uname -m)
 PLATFORM	:= $(shell uname)
@@ -99,10 +99,11 @@ DEFAULT_PREFIX		:= $(CURDIR)/local$(MULTI_SUFFIX)
 DEFAULT_LIBDIR		:= $(DEFAULT_PREFIX)/lib
 DEFAULT_INCDIR		:= $(DEFAULT_PREFIX)/include
 
+MACOS_MIN_VERSION := 10.12
 ifeq ($(PLATFORM), Darwin)
 	PLAT_DARWIN := Yes
 	# Ben removed ppc and x86_64 to fix libgmp compilation
-	DEFAULT_MACARGS	:= -mmacosx-version-min=10.9
+	DEFAULT_MACARGS	:= -mmacosx-version-min="$(MACOS_MIN_VERSION)"
 	VIS	:= -fvisibility=hidden
 endif
 ifeq ($(PLATFORM), Linux)
@@ -312,7 +313,7 @@ CONF_CGAL               += -DBOOST_USE_STATIC_LIBS=ON
 CONF_CGAL               += -DBOOST_ROOT=$(DEFAULT_PREFIX)
 ifdef PLAT_DARWIN
 CONF_CGAL		+= -DCMAKE_OSX_SYSROOT=`xcrun --sdk macosx --show-sdk-path`
-CONF_CGAL               += -DCMAKE_OSX_DEPLOYMENT_TARGET=10.9
+CONF_CGAL               += -DCMAKE_OSX_DEPLOYMENT_TARGET="$(MACOS_MIN_VERSION)"
 endif
 
 # libsquish
@@ -344,7 +345,7 @@ CONF_LIBSHP		+= cross=$(M32_SWITCH)
 
 # libssl
 ARCHIVE_LIBSSL		:= openssl-$(VER_LIBSSL).tar.gz
-CONF_LIBSSL		:= --openssldir=$(DEFAULT_PREFIX)
+CONF_LIBSSL		:= --openssldir=$(DEFAULT_PREFIX) --prefix=$(DEFAULT_PREFIX)
 ifdef PLAT_DARWIN
 CONF_LIBSSL		+= darwin64-x86_64-cc
 endif
@@ -358,11 +359,7 @@ endif
 # libcurl
 ARCHIVE_LIBCURL		:= curl-$(VER_LIBCURL).tar.gz
 CFLAGS_LIBCURL		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-ifdef PLAT_LINUX
 LDFLAGS_LIBCURL		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
-else
-LDFLAGS_LIBCURL		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH) -Wl,-no_weak_imports,-search_paths_first -Werror=partial-availability"
-endif
 CONF_LIBCURL		:= --prefix=$(DEFAULT_PREFIX)
 CONF_LIBCURL		+= --libdir=$(DEFAULT_LIBDIR)
 CONF_LIBCURL		+= --enable-shared=no
@@ -389,8 +386,8 @@ clean:
 	@-rm -rf ./local64
 
 directories:
-	@-mkdir local
-	@-mkdir local/lib
+	@-[ -d "./local$(MULTI_SUFFIX)/include" ] || mkdir -p "./local$(MULTI_SUFFIX)/include"
+	@-[ -d "./local$(MULTI_SUFFIX)/lib" ] || mkdir -p "./local$(MULTI_SUFFIX)/lib"
 
 boost: ./local$(MULTI_SUFFIX)/lib/.xpt_boost
 ./local$(MULTI_SUFFIX)/lib/.xpt_boost:
@@ -687,8 +684,11 @@ libssl: ./local$(MULTI_SUFFIX)/lib/.xpt_libssl
 	chmod +x Configure && \
 	./Configure $(CONF_LIBSSL) $(BE_QUIET)
 	@cd "openssl-$(VER_LIBSSL)" && \
-	export MACOSX_DEPLOYMENT_TARGET=10.9 && \
+	export MACOSX_DEPLOYMENT_TARGET="$(MACOS_MIN_VERSION)" && \
 	$(MAKE) -j1 $(BE_QUIET) && $(MAKE) install_sw $(BE_QUIET)
+	@-cp -r openssl-$(VER_LIBSSL)/include/openssl "$(DEFAULT_INCDIR)"
+	@-cp -r openssl-$(VER_LIBSSL)/include/crypto "$(DEFAULT_INCDIR)"
+	@-rm -f "$(DEFAULT_LIBDIR)/*.dylib"
 	@-rm -rf "openssl-$(VER_LIBSSL)"
 	@touch $@
 
