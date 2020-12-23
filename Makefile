@@ -364,8 +364,11 @@ CONF_LIBCURL		:= --prefix=$(DEFAULT_PREFIX)
 CONF_LIBCURL		+= --libdir=$(DEFAULT_LIBDIR)
 CONF_LIBCURL		+= --enable-shared=no
 CONF_LIBCURL		+= --with-ssl=$(DEFAULT_PREFIX) --without-libidn --disable-ldap
+CONF_LIBCURL		+= --with-zlib=$(DEFAULT_PREFIX)
 CONF_LIBCURL		+= --disable-dependency-tracking
 CONF_LIBCURL		+= --without-librtmp --without-ca-path --enable-hidden-symbols
+# Try to avoid automatically picking up system packages
+CONF_LIBCURL		+= --without-libssh --without-libssh2 --without-brotli --without-zstd
 CONF_LIBCURL		+= "LIBS=-ldl"
 
 # targets
