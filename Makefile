@@ -337,17 +337,21 @@ LDFLAGS_LIBSHP		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_LIBSHP		:= AR="$(CROSSPREFIX)ar" CC="$(CROSSPREFIX)gcc"
 CONF_LIBSHP		+= cross=$(M32_SWITCH)
 
+ifdef PLAT_LINUX
+EXTRA_LIB :=libcurl
+endif
+
 # targets
 .PHONY: all clean directories boost mesa_headers zlib libpng libfreetype libjpeg \
 libtiff libproj libgeotiff lib3ds libcgal libsquish libdime libshp \
-libexpat libgmp libmpfr
+libexpat libgmp libmpfr libcurl
 
 all: ./local$(MULTI_SUFFIX)/.xpt_libs
 ./local$(MULTI_SUFFIX)/.xpt_libs: directories boost mesa_headers zlib libpng \
 libfreetype libjpeg libtiff libproj libgeotiff lib3ds libcgal \
-libsquish libdime libshp libexpat libgmp libmpfr
+libsquish libdime libshp libexpat libgmp libmpfr $(EXTRA_LIB)
 	@touch ./local$(MULTI_SUFFIX)/.xpt_libs
-	
+
 clean:
 	@echo "cleaning 3rd-party libraries, removing `pwd`/local"
 	@-rm -rf ./local
@@ -644,3 +648,9 @@ libshp: ./local$(MULTI_SUFFIX)/lib/.xpt_libshp
 	@cp shapelib-$(VER_LIBSHP)/.libs/libshp.a ./local$(MULTI_SUFFIX)/lib
 	@-rm -rf shapelib-$(VER_LIBSHP)
 	@touch $@
+
+libcurl: ./local$(MULTI_SUFFIX)/lib/libcurl.so
+./local$(MULTI_SUFFIX)/lib/libcurl.so: patches/libcurl.c
+	@echo "building unversioned libcurl.so stub ..."
+	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
+	$(CC) -shared -fpic -o $@ $<
