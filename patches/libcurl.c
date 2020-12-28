@@ -44,3 +44,33 @@ void curl_slist_free_all(struct curl_slist * slist)
 struct curl_slist * curl_slist_append(struct curl_slist * slist, const char * c)
 { return 0; }
 
+/* the same concept can also be used to prevent depending on GLIBC_2.29 when building
+   on Ubuntu 20.04. This glib version adds optimized math functions and even AVX/FMA versions
+   and the runtime linker knows which flavour to pick on any given CPU.
+
+   Using unversioned symbols here is benefical over using the "old" glibc_2.2.5 version numbers,
+   as users with a new glibc version will now benefit from having these highly optimized 
+   versions available. And it really doesn't matter at all that these functions are normally
+   provided by libm.so. The linker chooses the version-suffix used for any function as per the
+   first library that it encounters with the matching symbol in them. And the library name itself
+   isn't part of the symbol information.
+*/
+
+double pow(double x) { return 0.0; }
+double log(double x) { return 0.0; }
+double exp(double x) { return 0.0; }
+double exp2(double x) { return 0.0; }
+
+/* An alternate, less desireable option is to include the following explicit 
+   versioning requests in all source files, i.e. by including this in Xdefs.h
+   But we can 'unversion' this way - as the linker will require an unversioned 
+   matching symbol in the library, which isn't available.
+
+#if LIN
+  __asm__(".symver pow,  pow@GLIBC_2.2.5");
+  __asm__(".symver exp,  exp@GLIBC_2.2.5");
+  __asm__(".symver exp2, exp2@GLIBC_2.2.5");
+  __asm__(".symver log,  log@GLIBC_2.2.5");
+#endif
+
+*/
