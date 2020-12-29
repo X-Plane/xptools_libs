@@ -52,6 +52,12 @@ VER_LIBGMP	:= 6.1.2
 # http://www.mpfr.org/
 # http://www.mpfr.org/mpfr-current/#download
 VER_LIBMPFR	:= 4.0.2
+# http://curl.haxx.se/
+# http://curl.haxx.se/download.html
+VER_LIBCURL := 7.74.0
+# http://http://www.openssl.org/
+# https://www.openssl.org/source/
+VER_LIBSSL := 1.1.1i
 
 ARCHITECTURE	:= $(shell uname -m)
 PLATFORM	:= $(shell uname)
@@ -337,21 +343,45 @@ LDFLAGS_LIBSHP		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
 CONF_LIBSHP		:= AR="$(CROSSPREFIX)ar" CC="$(CROSSPREFIX)gcc"
 CONF_LIBSHP		+= cross=$(M32_SWITCH)
 
-ifdef PLAT_LINUX
-EXTRA_LIB :=libcurl
+# libssl
+ARCHIVE_LIBSSL		:= openssl-$(VER_LIBSSL).tar.gz
+CONF_LIBSSL		:= --openssldir=$(DEFAULT_PREFIX) --prefix=$(DEFAULT_PREFIX)
+ifdef PLAT_DARWIN
+CONF_LIBSSL		+= darwin64-x86_64-cc
 endif
+ifdef PLAT_MINGW
+CONF_LIBSSL		+= mingw
+endif
+ifdef PLAT_LINUX
+CONF_LIBSSL		+= linux-x86_64
+endif
+
+# libcurl
+ARCHIVE_LIBCURL		:= curl-$(VER_LIBCURL).tar.gz
+CFLAGS_LIBCURL		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
+LDFLAGS_LIBCURL		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
+CONF_LIBCURL		:= --prefix=$(DEFAULT_PREFIX)
+CONF_LIBCURL		+= --libdir=$(DEFAULT_LIBDIR)
+CONF_LIBCURL		+= --enable-shared=no
+CONF_LIBCURL		+= --with-ssl=$(DEFAULT_PREFIX) --without-libidn --disable-ldap
+CONF_LIBCURL		+= --with-zlib=$(DEFAULT_PREFIX)
+CONF_LIBCURL		+= --disable-dependency-tracking
+CONF_LIBCURL		+= --without-librtmp --without-ca-path --enable-hidden-symbols
+# Try to avoid automatically picking up system packages
+CONF_LIBCURL		+= --without-libssh --without-libssh2 --without-brotli --without-zstd
+CONF_LIBCURL		+= "LIBS=-ldl"
 
 # targets
 .PHONY: all clean directories boost mesa_headers zlib libpng libfreetype libjpeg \
 libtiff libproj libgeotiff lib3ds libcgal libsquish libdime libshp \
-libexpat libgmp libmpfr libcurl
+libexpat libgmp libmpfr libssl libcurl
 
 all: ./local$(MULTI_SUFFIX)/.xpt_libs
 ./local$(MULTI_SUFFIX)/.xpt_libs: directories boost mesa_headers zlib libpng \
 libfreetype libjpeg libtiff libproj libgeotiff lib3ds libcgal \
-libsquish libdime libshp libexpat libgmp libmpfr $(EXTRA_LIB)
+libsquish libdime libshp libexpat libgmp libmpfr libssl libcurl
 	@touch ./local$(MULTI_SUFFIX)/.xpt_libs
-
+	
 clean:
 	@echo "cleaning 3rd-party libraries, removing `pwd`/local"
 	@-rm -rf ./local
@@ -554,6 +584,7 @@ libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff
 	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
 	@tar -xzf "./archives/$(ARCHIVE_GEOTIFF)"
 	@patch -p0 <patches/0001-libgeotiff-1.4.2-incode.patch
+	@patch -p0 <patches/0002-libgeotiff-1.4.2-python2.patch
 	@cd "libgeotiff-$(VER_GEOTIFF)" && \
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_GEOTIFF) LDFLAGS=$(LDFLAGS_GEOTIFF) \
@@ -649,8 +680,36 @@ libshp: ./local$(MULTI_SUFFIX)/lib/.xpt_libshp
 	@-rm -rf shapelib-$(VER_LIBSHP)
 	@touch $@
 
-libcurl: ./local$(MULTI_SUFFIX)/lib/libcurl.so
-./local$(MULTI_SUFFIX)/lib/libcurl.so: patches/libcurl.c
-	@echo "building unversioned libcurl.so stub ..."
-	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
-	$(CC) -shared -fpic -o $@ $<
+libssl: ./local$(MULTI_SUFFIX)/lib/.xpt_libssl
+./local$(MULTI_SUFFIX)/lib/.xpt_libssl:
+	@echo "building libssl"
+	@tar -xzf "./archives/$(ARCHIVE_LIBSSL)"
+	@cd "openssl-$(VER_LIBSSL)" && \
+	chmod +x Configure && \
+	./Configure $(CONF_LIBSSL) $(BE_QUIET)
+	@cd "openssl-$(VER_LIBSSL)" && \
+	export MACOSX_DEPLOYMENT_TARGET="$(MACOS_MIN_VERSION)" && \
+	$(MAKE) -j1 $(BE_QUIET) && $(MAKE) install_sw $(BE_QUIET)
+	@-cp -r openssl-$(VER_LIBSSL)/include/openssl "$(DEFAULT_INCDIR)"
+	@-cp -r openssl-$(VER_LIBSSL)/include/crypto "$(DEFAULT_INCDIR)"
+	@-rm -f "$(DEFAULT_LIBDIR)/*.dylib"
+	@-rm -rf "openssl-$(VER_LIBSSL)"
+	@touch $@
+
+libcurl: ./local$(MULTI_SUFFIX)/lib/.xpt_libcurl
+./local$(MULTI_SUFFIX)/lib/.xpt_libcurl: \
+./local$(MULTI_SUFFIX)/lib/.xpt_libssl
+	@echo "building libcurl..."
+	@tar -xzf "./archives/$(ARCHIVE_LIBCURL)"
+ifdef PLAT_MINGW
+	@cd "curl-$(VER_LIBCURL)" && rm src/tool_hugehelp.c
+endif
+	@cd "curl-$(VER_LIBCURL)" && \
+	chmod +x configure && \
+	CFLAGS=$(CFLAGS_LIBCURL) LDFLAGS=$(LDFLAGS_LIBCURL) \
+	env PKG_CONFIG_PATH=$(DEFAULT_LIBDIR)/pkgconfig \
+	./configure $(CONF_LIBCURL) $(BE_QUIET)
+	@$(MAKE) -C "curl-$(VER_LIBCURL)" $(BE_QUIET)
+	@$(MAKE) -C "curl-$(VER_LIBCURL)" install $(BE_QUIET)
+	@-rm -rf curl-$(VER_LIBCURL)
+	@touch $@
