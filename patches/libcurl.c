@@ -56,6 +56,7 @@ struct curl_slist * curl_slist_append(struct curl_slist * slist, const char * c)
    isn't part of the symbol information.
 */
 
+float powf(float x) { return 0.0; }
 double pow(double x) { return 0.0; }
 double log(double x) { return 0.0; }
 double exp(double x) { return 0.0; }
