@@ -44,11 +44,16 @@ void curl_slist_free_all(struct curl_slist * slist)
 struct curl_slist * curl_slist_append(struct curl_slist * slist, const char * c)
 { return 0; }
 
+
 /* the same concept can also be used to prevent depending on GLIBC_2.29 when building
    on Ubuntu 20.04. This glib version adds optimized math functions and even AVX/FMA versions
-   and the runtime linker knows which flavour to pick on any given CPU.
+   and the runtime linker knows which flavour to pick on any given CPU. 
 
-   Using unversioned symbols here is benefical over using the "old" glibc_2.2.5 version numbers,
+   But this only works if -flto is NOT used !!! With -flto this code below has no effect.
+   Its some known bugs in the linker that make it take the system dynlibs over user supplied 
+   ones for builtin functions. It might get better in gcc 10.2 or later, its being worked on.
+
+   Using unversioned symbols here are benefical over using the "old" glibc_2.2.5 version numbers,
    as users with a new glibc version will now benefit from having these highly optimized 
    versions available. And it really doesn't matter at all that these functions are normally
    provided by libm.so. The linker chooses the version-suffix used for any function as per the
