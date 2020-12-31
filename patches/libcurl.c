@@ -49,18 +49,25 @@ struct curl_slist * curl_slist_append(struct curl_slist * slist, const char * c)
    on Ubuntu 20.04. This glib version adds optimized math functions and even AVX/FMA versions
    and the runtime linker knows which flavour to pick on any given CPU. 
 
-   But this only works if -flto is NOT used !!! With -flto this code below has no effect.
-   Its some known bugs in the linker that make it take the system dynlibs over user supplied 
-   ones for builtin functions. It might get better in gcc 10.2 or later, its being worked on.
-
    Using unversioned symbols here are benefical over using the "old" glibc_2.2.5 version numbers,
    as users with a new glibc version will now benefit from having these highly optimized 
    versions available. And it really doesn't matter at all that these functions are normally
    provided by libm.so. The linker chooses the version-suffix used for any function as per the
    first library that it encounters with the matching symbol in them. And the library name itself
    isn't part of the symbol information.
+
+   But (there is always something, right ?) there are some know bugs in the gnu ld linker.
+   Which cause this trick to not work when 
+   - compiler intrinsic __builiin functions exist for any given function
+   - and -flto is used
+   There is no known workaround, but either NOT using -flto or not the gnu linker.
+   So there comes the google 'gold' linker: It has no problems here, its faster than
+   the gnu linker and its available on pretty much all linux distros. Its ABI functions 
+   are 100% compatible with the gu linker - so we only have to use it when linking these
+   'highly portable binaries'.
 */
 
+float  powf(float x, float y) { return 0.0; }
 double pow(double x, double y) { return 0.0; }
 double log(double x) { return 0.0; }
 double exp(double x) { return 0.0; }
@@ -70,8 +77,11 @@ double exp2(double x) { return 0.0; }
    versioning requests in all source files, i.e. by including this in Xdefs.h
    But we can 'unversion' this way - as the linker will require an unversioned 
    matching symbol in the library, which isn't available.
+   Its also inherently not working with -flto, as there is no assembler running 
+   at compile time.
 
 #if LIN
+  __asm__(".symver powf  powf@GLIBC_2.2.5");
   __asm__(".symver pow,  pow@GLIBC_2.2.5");
   __asm__(".symver exp,  exp@GLIBC_2.2.5");
   __asm__(".symver exp2, exp2@GLIBC_2.2.5");
