@@ -67,10 +67,12 @@ struct curl_slist * curl_slist_append(struct curl_slist * slist, const char * c)
    'highly portable binaries'.
 */
 
-float  powf(float x, float y) { return 0.0; }
 double pow(double x, double y) { return 0.0; }
+float  powf(float x, float y) { return 0.0; }
 double log(double x) { return 0.0; }
+float  logf(float x) { return 0.0; }
 double exp(double x) { return 0.0; }
+float  expf(float x) { return 0.0; }
 double exp2(double x) { return 0.0; }
 
 /* An alternate, less desireable option is to include the following explicit 
