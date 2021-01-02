@@ -554,6 +554,7 @@ libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff
 	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
 	@tar -xzf "./archives/$(ARCHIVE_GEOTIFF)"
 	@patch -p0 <patches/0001-libgeotiff-1.4.2-incode.patch
+	@patch -p0 <patches/0002-libgeotiff-1.4.2-python2.patch
 	@cd "libgeotiff-$(VER_GEOTIFF)" && \
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_GEOTIFF) LDFLAGS=$(LDFLAGS_GEOTIFF) \
