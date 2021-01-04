@@ -654,4 +654,4 @@ libcurl: ./local$(MULTI_SUFFIX)/lib/libcurl.so
 ./local$(MULTI_SUFFIX)/lib/libcurl.so: patches/libcurl.c
 	@echo "building unversioned libcurl.so stub ..."
 	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
-	$(CC) -shared -fpic -o $@ $<
+	$(CC) -shared -fpic -Wl,-soname,libcurl.so.4 -o $@ $<
