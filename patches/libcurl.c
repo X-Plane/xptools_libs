@@ -67,6 +67,7 @@ struct curl_slist * curl_slist_append(struct curl_slist * slist, const char * c)
    'highly portable binaries'.
 */
 
+float  sqrtf(float x) { return 0.0; }
 double pow(double x, double y) { return 0.0; }
 float  powf(float x, float y) { return 0.0; }
 double log(double x) { return 0.0; }
@@ -83,6 +84,7 @@ double exp2(double x) { return 0.0; }
    at compile time.
 
 #if LIN
+  __asm__(".symver sqrtf sqrtf@GLIBC_2.2.5");
   __asm__(".symver powf  powf@GLIBC_2.2.5");
   __asm__(".symver pow,  pow@GLIBC_2.2.5");
   __asm__(".symver exp,  exp@GLIBC_2.2.5");
