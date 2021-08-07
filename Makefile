@@ -39,7 +39,7 @@ VER_LIBSQUISH	:= 1.10
 # http://www.boost.org/
 VER_BOOST	:= 1_71_0
 BOOST_SHORTVER	:= 1_71
-BOOST_URL   := https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz
+BOOST_URL   := https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/boost_1_71_0.tar.gz
 # http://www.mesa3d.org/
 # http://sourceforge.net/projects/mesa3d/files/
 VER_MESA	:= 7.5
@@ -553,7 +553,6 @@ libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff
 	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
 	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
 	@tar -xzf "./archives/$(ARCHIVE_GEOTIFF)"
-	@patch -p0 <patches/0001-libgeotiff-1.4.2-incode.patch
 	@patch -p0 <patches/0002-libgeotiff-1.4.2-python2.patch
 	@cd "libgeotiff-$(VER_GEOTIFF)" && \
 	chmod +x configure && \
