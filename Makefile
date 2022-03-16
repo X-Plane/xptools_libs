@@ -39,7 +39,7 @@ VER_LIBSQUISH	:= 1.10
 # http://www.boost.org/
 VER_BOOST	:= 1_71_0
 BOOST_SHORTVER	:= 1_71
-BOOST_URL   := https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz
+BOOST_URL   := https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/boost_1_71_0.tar.gz
 # http://www.mesa3d.org/
 # http://sourceforge.net/projects/mesa3d/files/
 VER_MESA	:= 7.5
