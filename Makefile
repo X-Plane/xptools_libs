@@ -357,6 +357,7 @@ clean:
 	@-rm -rf ./local
 	@-rm -rf ./local32
 	@-rm -rf ./local64
+	@-rm -rf ./lib* ./boost
 
 directories:
 	@-[ -d "./local$(MULTI_SUFFIX)/include" ] || mkdir -p "./local$(MULTI_SUFFIX)/include"
