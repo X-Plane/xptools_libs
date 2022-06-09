@@ -98,7 +98,7 @@ ifeq ($(PLATFORM), Darwin)
 	PLAT_DARWIN := Yes
 	# Ben removed ppc and x86_64 to fix libgmp compilation
 	DEFAULT_MACARGS	:= -mmacosx-version-min="$(MACOS_MIN_VERSION)" -arch x86_64
-#	VIS	:= -fvisibility=hidden
+	VIS	:= -fvisibility=hidden
 endif
 ifeq ($(PLATFORM), Linux)
 	PLAT_LINUX := Yes
@@ -313,7 +313,7 @@ endif
 # libsquish
 ARCHIVE_LIBSQUISH	:= squish-$(VER_LIBSQUISH).tar.gz
 CONF_LIBSQUISH		:= INSTALL_DIR=$(DEFAULT_PREFIX)
-CONF_LIBSQUISH		+= CPPFLAGS="$(DEFAULT_MACARGS) -DSQUISH_USE_SSE=2 -I$(DEFAULT_INCDIR) $(M32_SWITCH) $(VIS)"
+CONF_LIBSQUISH		+= CPPFLAGS="$(DEFAULT_MACARGS) -DSQUISH_USE_SSE=2 -I$(DEFAULT_INCDIR) $(M32_SWITCH)"
 CONF_LIBSQUISH		+= AR="$(CROSSPREFIX)ar" CXX="$(CROSSPREFIX)g++"
 CONF_LIBSQUISH		+= CXXFLAGS="-O2"
 
