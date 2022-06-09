@@ -13,8 +13,6 @@ VER_FREETYPE	:= 2.3.11
 VER_LIBPROJ	:= 4.7.0
 # http://trac.osgeo.org/geotiff/
 VER_GEOTIFF	:= 1.4.2
-# http://www.lib3ds.org/; TODO: new release 2.0, has API changes
-VER_LIB3DS	:= 1.3.0
 # http://www.coin3d.org/lib/dime; no releases yet
 # https://svn.coin3d.org/repos/dime/trunk/
 # svn co https://svn.coin3d.org/repos/dime/trunk dime
@@ -268,20 +266,6 @@ CONF_GEOTIFF		+= --host=$(CROSSHOST)
 CONF_GEOTIFF		+= --target=$(CROSSHOST)
 endif
 
-# lib3ds
-ARCHIVE_LIB3DS		:= lib3ds-$(VER_LIB3DS).tar.gz
-CFLAGS_LIB3DS		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_LIB3DS		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
-CONF_LIB3DS		:= --prefix=$(DEFAULT_PREFIX)
-CONF_LIB3DS		+= --libdir=$(DEFAULT_LIBDIR)
-CONF_LIB3DS		+= --enable-shared=no
-CONF_LIB3DS		+= --enable-maintainer-mode
-CONF_LIB3DS		+= --disable-dependency-tracking
-CONF_LIB3DS		+= CCDEPMODE="depmode=none"
-ifdef PLAT_MINGW
-CONF_LIB3DS		+= --host=$(CROSSHOST)
-endif
-
 # libcgal
 ARCHIVE_CGAL		:= CGAL-$(VER_CGAL).tar.xz
 CONF_CGAL		:= -DCGAL_CXX_FLAGS="$(VIS) -I$(DEFAULT_INCDIR)"
@@ -313,7 +297,7 @@ endif
 # libsquish
 ARCHIVE_LIBSQUISH	:= squish-$(VER_LIBSQUISH).tar.gz
 CONF_LIBSQUISH		:= INSTALL_DIR=$(DEFAULT_PREFIX)
-CONF_LIBSQUISH		+= CPPFLAGS="$(DEFAULT_MACARGS) -DSQUISH_USE_SSE=2 -I$(DEFAULT_INCDIR) $(M32_SWITCH) $(VIS)"
+CONF_LIBSQUISH		+= CPPFLAGS="$(DEFAULT_MACARGS) -DSQUISH_USE_SSE=2 -I$(DEFAULT_INCDIR) $(M32_SWITCH)"
 CONF_LIBSQUISH		+= AR="$(CROSSPREFIX)ar" CXX="$(CROSSPREFIX)g++"
 CONF_LIBSQUISH		+= CXXFLAGS="-O2"
 
@@ -343,12 +327,12 @@ endif
 
 # targets
 .PHONY: all clean directories boost mesa_headers zlib libpng libfreetype libjpeg \
-libtiff libproj libgeotiff lib3ds libcgal libsquish libdime libshp \
+libtiff libproj libgeotiff libcgal libsquish libdime libshp \
 libexpat libgmp libmpfr libcurl
 
 all: ./local$(MULTI_SUFFIX)/.xpt_libs
 ./local$(MULTI_SUFFIX)/.xpt_libs: directories boost mesa_headers zlib libpng \
-libfreetype libjpeg libtiff libproj libgeotiff lib3ds libcgal \
+libfreetype libjpeg libtiff libproj libgeotiff libcgal \
 libsquish libdime libshp libexpat libgmp libmpfr $(EXTRA_LIB)
 	@touch ./local$(MULTI_SUFFIX)/.xpt_libs
 
@@ -565,21 +549,6 @@ libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff
 	@$(MAKE) -C "libgeotiff-$(VER_GEOTIFF)" install -j1 $(BE_QUIET)
 	@-rm -rf libgeotiff-$(VER_GEOTIFF)
 	@-rm -rf ./local/lib/libgeotiff.so*
-	@touch $@
-
-lib3ds: ./local$(MULTI_SUFFIX)/lib/.xpt_lib3ds
-./local$(MULTI_SUFFIX)/lib/.xpt_lib3ds:
-	@echo "building lib3ds..."
-	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
-	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
-	@tar -xzf "./archives/$(ARCHIVE_LIB3DS)"
-	@cd "lib3ds-$(VER_LIB3DS)" && \
-	chmod +x configure && \
-	CFLAGS=$(CFLAGS_LIB3DS) LDFLAGS=$(LDFLAGS_LIB3DS) \
-	./configure $(CONF_LIB3DS) $(BE_QUIET)
-	@$(MAKE) -C "lib3ds-$(VER_LIB3DS)" $(BE_QUIET)
-	@$(MAKE) -C "lib3ds-$(VER_LIB3DS)" install $(BE_QUIET)
-	@-rm -rf lib3ds-$(VER_LIB3DS)
 	@touch $@
 
 
