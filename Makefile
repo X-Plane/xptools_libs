@@ -98,7 +98,7 @@ ifeq ($(PLATFORM), Darwin)
 	PLAT_DARWIN := Yes
 	# Ben removed ppc and x86_64 to fix libgmp compilation
 	DEFAULT_MACARGS	:= -mmacosx-version-min="$(MACOS_MIN_VERSION)" -arch x86_64
-	VIS	:= -fvisibility=hidden
+#	VIS	:= -fvisibility=hidden
 endif
 ifeq ($(PLATFORM), Linux)
 	PLAT_LINUX := Yes
@@ -594,7 +594,7 @@ libsquish: ./local$(MULTI_SUFFIX)/lib/.xpt_libsquish
 	patch -p1 < ./0001-libsquish-gcc-4.3-header-fix.patch $(BE_QUIET)
 	@cd "squish-$(VER_LIBSQUISH)" && \
 	$(MAKE) $(CONF_LIBSQUISH) install $(BE_QUIET)
-	@-rm -rf squish-$(VER_LIBSQUISH)
+#	@-rm -rf squish-$(VER_LIBSQUISH)
 	@touch $@
 
 
