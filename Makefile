@@ -97,7 +97,7 @@ MACOS_MIN_VERSION := 10.11
 ifeq ($(PLATFORM), Darwin)
 	PLAT_DARWIN := Yes
 	# Ben removed ppc and x86_64 to fix libgmp compilation
-	DEFAULT_MACARGS	:= -mmacosx-version-min="$(MACOS_MIN_VERSION)"
+	DEFAULT_MACARGS	:= -mmacosx-version-min="$(MACOS_MIN_VERSION)" -arch x86_64
 	VIS	:= -fvisibility=hidden
 endif
 ifeq ($(PLATFORM), Linux)
