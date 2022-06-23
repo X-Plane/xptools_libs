@@ -13,8 +13,6 @@ VER_FREETYPE	:= 2.3.11
 VER_LIBPROJ	:= 4.7.0
 # http://trac.osgeo.org/geotiff/
 VER_GEOTIFF	:= 1.4.2
-# http://www.lib3ds.org/; TODO: new release 2.0, has API changes
-VER_LIB3DS	:= 1.3.0
 # http://www.coin3d.org/lib/dime; no releases yet
 # https://svn.coin3d.org/repos/dime/trunk/
 # svn co https://svn.coin3d.org/repos/dime/trunk dime
@@ -25,8 +23,6 @@ VER_LIBJPEG	:= 9a
 # http://www.libpng.org/
 # http://www.libpng.org/pub/png/libpng.html
 VER_LIBPNG	:= 1.2.41
-# http://www.zlib.net/
-VER_ZLIB	:= 1.2.3
 # http://www.libtiff.org/
 # ftp://ftp.remotesensing.org/pub/libtiff
 VER_LIBTIFF	:= 4.0.3
@@ -39,7 +35,7 @@ VER_LIBSQUISH	:= 1.10
 # http://www.boost.org/
 VER_BOOST	:= 1_71_0
 BOOST_SHORTVER	:= 1_71
-BOOST_URL   := https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.gz
+BOOST_URL   := https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/boost_1_71_0.tar.gz
 # http://www.mesa3d.org/
 # http://sourceforge.net/projects/mesa3d/files/
 VER_MESA	:= 7.5
@@ -110,18 +106,6 @@ ARCHIVE_BOOST		:= boost_$(VER_BOOST).tar.gz
 
 # mesa headers
 ARCHIVE_MESA		:= mesa-headers-$(VER_MESA).tar.gz
-
-# zlib
-ARCHIVE_ZLIB		:= zlib-$(VER_ZLIB).tar.gz
-ifdef PLAT_DARWIN
-AR_ZLIB			:= "libtool -static -o"
-else
-AR_ZLIB			:= "$(CROSSPREFIX)ar rcs"
-endif
-CC_ZLIB			:= "$(CROSSPREFIX)gcc"
-CFLAGS_ZLIB		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_ZLIB		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
-CONF_ZLIB		:= --prefix=$(DEFAULT_PREFIX)
 
 # libgmp
 ARCHIVE_LIBGMP		:= gmp-$(VER_LIBGMP).tar.xz
@@ -225,8 +209,7 @@ CONF_LIBTIFF		+= --disable-lzma
 CONF_LIBTIFF		+= --disable-jbig
 CONF_LIBTIFF		+= --with-jpeg-include-dir=$(DEFAULT_INCDIR)
 CONF_LIBTIFF		+= --with-jpeg-lib-dir=$(DEFAULT_LIBDIR)
-CONF_LIBTIFF		+= --with-zlib-include-dir=$(DEFAULT_INCDIR)
-CONF_LIBTIFF		+= --with-zlib-lib-dir=$(DEFAULT_LIBDIR)
+CONF_LIBTIFF		+= --with-zlib
 CONF_LIBTIFF		+= CCDEPMODE="depmode=none"
 ifdef PLAT_DARWIN
 CONF_LIBTIFF		+= --with-apple-opengl-framework
@@ -258,7 +241,7 @@ LDFLAGS_GEOTIFF		:= "$(M32_SWITCH) -L$(DEFAULT_LIBDIR)"
 CONF_GEOTIFF		:= --prefix=$(DEFAULT_PREFIX)
 CONF_GEOTIFF		+= --libdir=$(DEFAULT_LIBDIR)
 CONF_GEOTIFF		+= --enable-shared=no
-CONF_GEOTIFF		+= --with-zip=$(DEFAULT_PREFIX)
+CONF_GEOTIFF		+= --with-zip
 CONF_GEOTIFF		+= --with-jpeg=$(DEFAULT_PREFIX)
 CONF_GEOTIFF		+= --with-libtiff=$(DEFAULT_PREFIX)
 CONF_GEOTIFF		+= --with-proj=$(DEFAULT_PREFIX)
@@ -266,20 +249,6 @@ CONF_GEOTIFF		+= --enable-incode-epsg
 ifdef PLAT_MINGW
 CONF_GEOTIFF		+= --host=$(CROSSHOST)
 CONF_GEOTIFF		+= --target=$(CROSSHOST)
-endif
-
-# lib3ds
-ARCHIVE_LIB3DS		:= lib3ds-$(VER_LIB3DS).tar.gz
-CFLAGS_LIB3DS		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_LIB3DS		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
-CONF_LIB3DS		:= --prefix=$(DEFAULT_PREFIX)
-CONF_LIB3DS		+= --libdir=$(DEFAULT_LIBDIR)
-CONF_LIB3DS		+= --enable-shared=no
-CONF_LIB3DS		+= --enable-maintainer-mode
-CONF_LIB3DS		+= --disable-dependency-tracking
-CONF_LIB3DS		+= CCDEPMODE="depmode=none"
-ifdef PLAT_MINGW
-CONF_LIB3DS		+= --host=$(CROSSHOST)
 endif
 
 # libcgal
@@ -342,13 +311,13 @@ EXTRA_LIB :=libcurl
 endif
 
 # targets
-.PHONY: all clean directories boost mesa_headers zlib libpng libfreetype libjpeg \
-libtiff libproj libgeotiff lib3ds libcgal libsquish libdime libshp \
+.PHONY: all clean directories boost mesa_headers libpng libfreetype libjpeg \
+libtiff libproj libgeotiff libcgal libsquish libdime libshp \
 libexpat libgmp libmpfr libcurl
 
 all: ./local$(MULTI_SUFFIX)/.xpt_libs
-./local$(MULTI_SUFFIX)/.xpt_libs: directories boost mesa_headers zlib libpng \
-libfreetype libjpeg libtiff libproj libgeotiff lib3ds libcgal \
+./local$(MULTI_SUFFIX)/.xpt_libs: directories boost mesa_headers libpng \
+libfreetype libjpeg libtiff libproj libgeotiff libcgal \
 libsquish libdime libshp libexpat libgmp libmpfr $(EXTRA_LIB)
 	@touch ./local$(MULTI_SUFFIX)/.xpt_libs
 
@@ -413,22 +382,6 @@ mesa_headers: ./local$(MULTI_SUFFIX)/include/.xpt_mesa
 	@tar -C "./local$(MULTI_SUFFIX)/include/mesa" -xzf "./archives/$(ARCHIVE_MESA)"
 	@touch $@
 
-
-zlib: ./local$(MULTI_SUFFIX)/lib/.xpt_zlib
-./local$(MULTI_SUFFIX)/lib/.xpt_zlib:
-	@echo "building zlib..."
-	@tar -xzf "./archives/$(ARCHIVE_ZLIB)"
-	@cd "zlib-$(VER_ZLIB)" && \
-	chmod +x configure && \
-	AR=$(AR_ZLIB) CC=$(CC_ZLIB) CFLAGS=$(CFLAGS_ZLIB) \
-	LDFLAGS=$(LDFLAGS_ZLIB) \
-	./configure $(CONF_ZLIB) $(BE_QUIET)
-	@$(MAKE) -C "zlib-$(VER_ZLIB)" $(BE_QUIET)
-	@$(MAKE) -C "zlib-$(VER_ZLIB)" install $(BE_QUIET)
-	@-rm -rf zlib-$(VER_ZLIB)
-	@touch $@
-
-
 libexpat: ./local$(MULTI_SUFFIX)/lib/.xpt_libexpat
 ./local$(MULTI_SUFFIX)/lib/.xpt_libexpat:
 	@echo "building libexpat..."
@@ -469,7 +422,7 @@ libmpfr: ./local$(MULTI_SUFFIX)/lib/.xpt_libmpfr
 	@touch $@
 
 libpng: ./local$(MULTI_SUFFIX)/lib/.xpt_libpng
-./local$(MULTI_SUFFIX)/lib/.xpt_libpng: ./local$(MULTI_SUFFIX)/lib/.xpt_zlib
+./local$(MULTI_SUFFIX)/lib/.xpt_libpng:
 	@echo "building libpng..."
 	@tar -xzf "./archives/$(ARCHIVE_LIBPNG)"
 	@cd "libpng-$(VER_LIBPNG)" && \
@@ -483,7 +436,7 @@ libpng: ./local$(MULTI_SUFFIX)/lib/.xpt_libpng
 
 
 libfreetype: ./local$(MULTI_SUFFIX)/lib/.xpt_libfreetype
-./local$(MULTI_SUFFIX)/lib/.xpt_libfreetype: ./local$(MULTI_SUFFIX)/lib/.xpt_zlib
+./local$(MULTI_SUFFIX)/lib/.xpt_libfreetype:
 	@echo "building libfreetype..."
 	@tar -xzf "./archives/$(ARCHIVE_FREETYPE)"
 	@cd "freetype-$(VER_FREETYPE)" && \
@@ -513,7 +466,7 @@ libjpeg: ./local$(MULTI_SUFFIX)/lib/.xpt_libjpeg
 
 
 libtiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libtiff
-./local$(MULTI_SUFFIX)/lib/.xpt_libtiff: ./local$(MULTI_SUFFIX)/lib/.xpt_zlib ./local$(MULTI_SUFFIX)/lib/.xpt_libjpeg
+./local$(MULTI_SUFFIX)/lib/.xpt_libtiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libjpeg
 	@echo "building libtiff..."
 	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
 	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
@@ -547,7 +500,7 @@ libproj: ./local$(MULTI_SUFFIX)/lib/.xpt_libproj
 
 
 libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff
-./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_zlib ./local$(MULTI_SUFFIX)/lib/.xpt_libjpeg \
+./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libjpeg \
 ./local$(MULTI_SUFFIX)/lib/.xpt_libtiff ./local$(MULTI_SUFFIX)/lib/.xpt_libproj
 	@echo "building libgeotiff..."
 	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
@@ -563,21 +516,6 @@ libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff
 	@$(MAKE) -C "libgeotiff-$(VER_GEOTIFF)" install -j1 $(BE_QUIET)
 	@-rm -rf libgeotiff-$(VER_GEOTIFF)
 	@-rm -rf ./local/lib/libgeotiff.so*
-	@touch $@
-
-lib3ds: ./local$(MULTI_SUFFIX)/lib/.xpt_lib3ds
-./local$(MULTI_SUFFIX)/lib/.xpt_lib3ds:
-	@echo "building lib3ds..."
-	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
-	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
-	@tar -xzf "./archives/$(ARCHIVE_LIB3DS)"
-	@cd "lib3ds-$(VER_LIB3DS)" && \
-	chmod +x configure && \
-	CFLAGS=$(CFLAGS_LIB3DS) LDFLAGS=$(LDFLAGS_LIB3DS) \
-	./configure $(CONF_LIB3DS) $(BE_QUIET)
-	@$(MAKE) -C "lib3ds-$(VER_LIB3DS)" $(BE_QUIET)
-	@$(MAKE) -C "lib3ds-$(VER_LIB3DS)" install $(BE_QUIET)
-	@-rm -rf lib3ds-$(VER_LIB3DS)
 	@touch $@
 
 
@@ -598,7 +536,6 @@ libsquish: ./local$(MULTI_SUFFIX)/lib/.xpt_libsquish
 
 libcgal: ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal
 ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal: \
-./local$(MULTI_SUFFIX)/lib/.xpt_zlib \
 ./local$(MULTI_SUFFIX)/lib/.xpt_libgmp \
 ./local$(MULTI_SUFFIX)/lib/.xpt_libmpfr \
 ./local$(MULTI_SUFFIX)/lib/.xpt_boost
