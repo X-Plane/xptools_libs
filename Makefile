@@ -89,11 +89,10 @@ DEFAULT_PREFIX		:= $(CURDIR)/local$(MULTI_SUFFIX)
 DEFAULT_LIBDIR		:= $(DEFAULT_PREFIX)/lib
 DEFAULT_INCDIR		:= $(DEFAULT_PREFIX)/include
 
-MACOS_MIN_VERSION := 10.11
+MACOS_MIN_VERSION := 10.12
 ifeq ($(PLATFORM), Darwin)
 	PLAT_DARWIN := Yes
-	# Ben removed ppc and x86_64 to fix libgmp compilation
-	DEFAULT_MACARGS	:= -mmacosx-version-min="$(MACOS_MIN_VERSION)"
+	DEFAULT_MACARGS	:= -mmacosx-version-min="$(MACOS_MIN_VERSION)" -arch x86_64
 	VIS	:= -fvisibility=hidden
 endif
 ifeq ($(PLATFORM), Linux)
