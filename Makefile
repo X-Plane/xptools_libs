@@ -1,8 +1,5 @@
-#BE_QUIET	:= > /dev/null 2>&1
+BE_QUIET	:= > /dev/null 2>&1
 
-# Note: Homebrew is actually a good source for figuring out all the dependencies of CGAL.
-#       It gives the required versions of the packages it needs.
-#       https://formulae.brew.sh/formula/cgal
 # http://www.cgal.org/
 VER_CGAL	:= 4.14.1
 CGAL_URL    := https://github.com/CGAL/cgal/releases/download/releases%2FCGAL-4.14.1/CGAL-4.14.1.tar.xz
@@ -310,21 +307,24 @@ EXTRA_LIB :=libcurl
 endif
 
 # targets
-.PHONY: all clean directories boost mesa_headers libpng libfreetype libjpeg \
+.PHONY: all all_wed clean directories boost mesa_headers libpng libfreetype libjpeg \
 libtiff libproj libgeotiff libcgal libsquish libdime libshp \
 libexpat libgmp libmpfr libcurl
 
-all: ./local$(MULTI_SUFFIX)/.xpt_libs
-./local$(MULTI_SUFFIX)/.xpt_libs: directories boost mesa_headers libpng \
-libfreetype libjpeg libtiff libproj libgeotiff libcgal \
-libsquish libdime libshp libexpat libgmp libmpfr $(EXTRA_LIB)
-	@touch ./local$(MULTI_SUFFIX)/.xpt_libs
+all_wed: directories \
+libpng libjpeg libtiff libproj libgeotiff libsquish libfreetype libexpat $(EXTRA_LIB)
+	@echo "done making libraries for WED and other xptools except Renderfarm"
+	@echo "use 'make all' to also make libraries for RF like Boost, CGAL"
+
+all: all_wed boost mesa_headers libcgal libdime libshp libgmp libmpfr
+	@echo "done making boost, cgal and other Renderfarm only dependencies"
 
 clean:
 	@echo "cleaning 3rd-party libraries, removing `pwd`/local"
 	@-rm -rf ./local
-	@-rm -rf ./local32
-	@-rm -rf ./local64
+	@-rm -rf ./local32 ./local64
+	@-rm -rf ./tiff-* ./squish-* ./proj-* ./libgeotiff-* ./CGAL-*
+
 
 directories:
 	@-[ -d "./local$(MULTI_SUFFIX)/include" ] || mkdir -p "./local$(MULTI_SUFFIX)/include"
@@ -389,7 +389,6 @@ libexpat: ./local$(MULTI_SUFFIX)/lib/.xpt_libexpat
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_LIBEXPAT) LDFLAGS=$(LDFLAGS_LIBEXPAT) \
 	./configure $(CONF_LIBEXPAT) $(BE_QUIET)
-	@$(MAKE) -C "expat-$(VER_LIBEXPAT)" $(BE_QUIET)
 	@$(MAKE) -C "expat-$(VER_LIBEXPAT)" install $(BE_QUIET)
 	@-rm -rf expat-$(VER_LIBEXPAT)
 	@touch $@
@@ -402,7 +401,6 @@ libgmp: ./local$(MULTI_SUFFIX)/lib/.xpt_libgmp
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_LIBGMP) CXXFLAGS=$(CXXFLAGS_LIBGMP) LDFLAGS=$(LDFLAGS_LIBGMP) \
 	./configure $(CONF_LIBGMP) $(BE_QUIET)
-	@$(MAKE) -C "gmp-$(VER_LIBGMP)" $(BE_QUIET)
 	@$(MAKE) -C "gmp-$(VER_LIBGMP)" install $(BE_QUIET)
 	@-rm -rf gmp-$(VER_LIBGMP)
 	@touch $@
@@ -415,7 +413,6 @@ libmpfr: ./local$(MULTI_SUFFIX)/lib/.xpt_libmpfr
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_LIBMPFR) LDFLAGS=$(LDFLAGS_LIBMPFR) \
 	./configure $(CONF_LIBMPFR) $(BE_QUIET)
-	@$(MAKE) -C "mpfr-$(VER_LIBMPFR)" $(BE_QUIET)
 	@$(MAKE) -C "mpfr-$(VER_LIBMPFR)" install $(BE_QUIET)
 	@-rm -rf mpfr-$(VER_LIBMPFR)
 	@touch $@
@@ -428,7 +425,6 @@ libpng: ./local$(MULTI_SUFFIX)/lib/.xpt_libpng
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_LIBPNG) LDFLAGS=$(LDFLAGS_LIBPNG) \
 	./configure $(CONF_LIBPNG) $(BE_QUIET)
-	@$(MAKE) -C "libpng-$(VER_LIBPNG)" $(BE_QUIET)
 	@$(MAKE) -C "libpng-$(VER_LIBPNG)" install $(BE_QUIET)
 	@-rm -rf libpng-$(VER_LIBPNG)
 	@touch $@
@@ -442,7 +438,6 @@ libfreetype: ./local$(MULTI_SUFFIX)/lib/.xpt_libfreetype
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_FREETYPE) LDFLAGS=$(LDFLAGS_FREETYPE) \
 	./configure $(CONF_FREETYPE) $(BE_QUIET)
-	@$(MAKE) -C "freetype-$(VER_FREETYPE)" $(BE_QUIET)
 	@$(MAKE) -C "freetype-$(VER_FREETYPE)" install $(BE_QUIET)
 	@-rm -rf freetype-$(VER_FREETYPE)
 	@touch $@
@@ -450,16 +445,12 @@ libfreetype: ./local$(MULTI_SUFFIX)/lib/.xpt_libfreetype
 libjpeg: ./local$(MULTI_SUFFIX)/lib/.xpt_libjpeg
 ./local$(MULTI_SUFFIX)/lib/.xpt_libjpeg:
 	@echo "building libjpeg..."
-	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
-	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
 	@tar -xzf "./archives/$(ARCHIVE_LIBJPEG)"
 	@cd "jpeg-$(VER_LIBJPEG)" && \
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_LIBJPEG) LDFLAGS=$(LDFLAGS_LIBJPEG) CC=$(CC_LIBJPEG) \
 	./configure $(CONF_LIBJPEG) $(BE_QUIET)
-	@$(MAKE) -C "jpeg-$(VER_LIBJPEG)" $(BE_QUIET)
-	@$(MAKE) -C "jpeg-$(VER_LIBJPEG)" install \
-	$(BE_QUIET)
+	@$(MAKE) -C "jpeg-$(VER_LIBJPEG)" install $(BE_QUIET)
 	@-rm -rf jpeg-$(VER_LIBJPEG)
 	@touch $@
 
@@ -467,14 +458,11 @@ libjpeg: ./local$(MULTI_SUFFIX)/lib/.xpt_libjpeg
 libtiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libtiff
 ./local$(MULTI_SUFFIX)/lib/.xpt_libtiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libjpeg
 	@echo "building libtiff..."
-	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
-	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
 	@tar -xzf "./archives/$(ARCHIVE_LIBTIFF)"
 	@cd "tiff-$(VER_LIBTIFF)" && \
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_LIBTIFF) CXXFLAGS=$(CXXFLAGS_LIBTIFF) LDFLAGS=$(LDFLAGS_LIBTIFF) \
 	./configure $(CONF_LIBTIFF) $(BE_QUIET)
-	@$(MAKE) -C "tiff-$(VER_LIBTIFF)" $(BE_QUIET)
 	@$(MAKE) -C "tiff-$(VER_LIBTIFF)" install $(BE_QUIET)
 	@-rm -rf tiff-$(VER_LIBTIFF)
 	@touch $@
@@ -482,8 +470,6 @@ libtiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libtiff
 libproj: ./local$(MULTI_SUFFIX)/lib/.xpt_libproj
 ./local$(MULTI_SUFFIX)/lib/.xpt_libproj:
 	@echo "building libproj..."
-	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
-	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
 	@tar -xzf "./archives/$(ARCHIVE_LIBPROJ)"
 	@cp patches/0001-libproj-disable-win32-mutex.patch \
 	"proj-$(VER_LIBPROJ)" && cd "proj-$(VER_LIBPROJ)" && \
@@ -493,7 +479,7 @@ libproj: ./local$(MULTI_SUFFIX)/lib/.xpt_libproj
 	CFLAGS=$(CFLAGS_LIBPROJ) LDFLAGS=$(LDFLAGS_LIBPROJ) \
 	./configure $(CONF_LIBPROJ) $(BE_QUIET)
 	@$(MAKE) -C "proj-$(VER_LIBPROJ)" -j1 $(BE_QUIET)
-	@$(MAKE) -C "proj-$(VER_LIBPROJ)" install -j1 $(BE_QUIET)
+	@$(MAKE) -C "proj-$(VER_LIBPROJ)" install $(BE_QUIET)
 	@-rm -rf proj-$(VER_LIBPROJ)
 	@touch $@
 
@@ -502,8 +488,6 @@ libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff
 ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libjpeg \
 ./local$(MULTI_SUFFIX)/lib/.xpt_libtiff ./local$(MULTI_SUFFIX)/lib/.xpt_libproj
 	@echo "building libgeotiff..."
-	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
-	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
 	@tar -xzf "./archives/$(ARCHIVE_GEOTIFF)"
 	@patch -p0 <patches/0001-libgeotiff-1.4.2-incode.patch
 	@cd "libgeotiff-$(VER_GEOTIFF)" && \
@@ -512,7 +496,7 @@ libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff
 	LD_SHARED=$(LD_GEOTIFF) AR=$(AR_GEOTIFF) \
 	./configure $(CONF_GEOTIFF) $(BE_QUIET)
 	@$(MAKE) -C "libgeotiff-$(VER_GEOTIFF)" -j1 $(BE_QUIET)
-	@$(MAKE) -C "libgeotiff-$(VER_GEOTIFF)" install -j1 $(BE_QUIET)
+	@$(MAKE) -C "libgeotiff-$(VER_GEOTIFF)" install $(BE_QUIET)
 	@-rm -rf libgeotiff-$(VER_GEOTIFF)
 	@-rm -rf ./local/lib/libgeotiff.so*
 	@touch $@
@@ -521,8 +505,6 @@ libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff
 libsquish: ./local$(MULTI_SUFFIX)/lib/.xpt_libsquish
 ./local$(MULTI_SUFFIX)/lib/.xpt_libsquish:
 	@echo "building libsquish..."
-	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
-	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
 	@tar -xzf "./archives/$(ARCHIVE_LIBSQUISH)"
 	@cp patches/0001-libsquish-gcc-4.3-header-fix.patch \
 	"squish-$(VER_LIBSQUISH)" && cd "squish-$(VER_LIBSQUISH)" && \
@@ -541,9 +523,6 @@ libcgal: ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal
 	@echo "downloading CGAL..."
 	@curl -Lo "./archives/$(ARCHIVE_CGAL)" "$(CGAL_URL)"
 	@echo "building libcgal..."
-	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
-	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
-	@-rm -rf "CGAL-$(VER_CGAL)"
 	@-mkdir "CGAL-$(VER_CGAL)"
 	@tar -xJf "./archives/$(ARCHIVE_CGAL)" -C "CGAL-$(VER_CGAL)" --strip-components=1
 	@cd "CGAL-$(VER_CGAL)" && \
@@ -556,14 +535,11 @@ libcgal: ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal
 libdime: ./local$(MULTI_SUFFIX)/lib/.xpt_libdime
 ./local$(MULTI_SUFFIX)/lib/.xpt_libdime:
 	@echo "building libdime..."
-	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
-	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
 	@tar -xzf "./archives/$(ARCHIVE_LIBDIME)"
 	@cd "dime-$(VER_LIBDIME)" && \
 	CFLAGS=$(CFLAGS_LIBDIME) CXXFLAGS=$(CFLAGS_LIBDIME) \
 	LDFLAGS=$(LDFLAGS_LIBDIME) \
 	./configure $(CONF_LIBDIME) $(BE_QUIET)
-	@$(MAKE) -C "dime-$(VER_LIBDIME)" $(BE_QUIET)
 	@$(MAKE) -C "dime-$(VER_LIBDIME)" install $(BE_QUIET)
 	@-rm -rf dime-$(VER_LIBDIME)
 	@touch $@
@@ -572,8 +548,6 @@ libdime: ./local$(MULTI_SUFFIX)/lib/.xpt_libdime
 libshp: ./local$(MULTI_SUFFIX)/lib/.xpt_libshp
 ./local$(MULTI_SUFFIX)/lib/.xpt_libshp:
 	@echo "building libshp..."
-	@-mkdir -p "./local$(MULTI_SUFFIX)/include"
-	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
 	@tar -xzf "./archives/$(ARCHIVE_LIBSHP)"
 	@cp patches/0001-libshp-fix-makefile-for-multiple-platforms.patch \
 	"shapelib-$(VER_LIBSHP)" && cd "shapelib-$(VER_LIBSHP)" && \
