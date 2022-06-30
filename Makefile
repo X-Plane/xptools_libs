@@ -86,10 +86,10 @@ DEFAULT_PREFIX		:= $(CURDIR)/local$(MULTI_SUFFIX)
 DEFAULT_LIBDIR		:= $(DEFAULT_PREFIX)/lib
 DEFAULT_INCDIR		:= $(DEFAULT_PREFIX)/include
 
-MACOS_MIN_VERSION := 10.12
+MACOS_MIN_VERSION := 10.15
 ifeq ($(PLATFORM), Darwin)
 	PLAT_DARWIN := Yes
-	DEFAULT_MACARGS	:= -mmacosx-version-min="$(MACOS_MIN_VERSION)" -arch x86_64
+	DEFAULT_MACARGS	:= -mmacosx-version-min="$(MACOS_MIN_VERSION)" -arch x86_64 -arch arm64
 	VIS	:= -fvisibility=hidden
 endif
 ifeq ($(PLATFORM), Linux)
