@@ -1,4 +1,4 @@
-BE_QUIET	:= > /dev/null 2>&1
+#BE_QUIET	:= > /dev/null 2>&1
 
 # http://www.cgal.org/
 VER_CGAL	:= 4.14.1
@@ -10,10 +10,6 @@ VER_FREETYPE	:= 2.3.11
 VER_LIBPROJ	:= 4.7.0
 # http://trac.osgeo.org/geotiff/
 VER_GEOTIFF	:= 1.4.2
-# http://www.coin3d.org/lib/dime; no releases yet
-# https://svn.coin3d.org/repos/dime/trunk/
-# svn co https://svn.coin3d.org/repos/dime/trunk dime
-VER_LIBDIME	:= r175
 # http://www.ijg.org/
 # http://www.ijg.org/files/
 VER_LIBJPEG	:= 9a
@@ -46,20 +42,10 @@ VER_LIBGMP	:= 6.1.2
 # http://www.mpfr.org/mpfr-current/#download
 VER_LIBMPFR	:= 4.0.2
 
-ARCHITECTURE	:= $(shell uname -m)
 PLATFORM	:= $(shell uname)
 ifneq (, $(findstring MINGW, $(PLATFORM)))
 	PLATFORM	:= Mingw
 	PLAT_MINGW	:= Yes
-endif
-
-ifeq ($(cross), m32)
-ifeq ($(ARCHITECTURE), x86_64)
-	MULTI_SUFFIX	:= 32
-	M32_SWITCH	:= -m32
-else
-	cross		:= ""
-endif
 endif
 
 ifeq ($(cross), mingw64)
@@ -67,7 +53,6 @@ ifdef PLAT_MINGW
 	MULTI_SUFFIX	:= 64
 	CROSSPREFIX	:= x86_64-w64-mingw32-
 	CROSSHOST	:= x86_64-w64-mingw32
-	ARCHITECTURE	:= x86_64
 else
 	cross		:= ""
 endif
@@ -76,7 +61,6 @@ ifdef PLAT_MINGW
 	MULTI_SUFFIX	:=
 #	CROSSPREFIX	:= i686-w64-mingw32-
 #	CROSSHOST	:= i686-w64-mingw32
-	ARCHITECTURE	:= i686
 else
 	cross		:= ""
 endif
@@ -86,10 +70,11 @@ DEFAULT_PREFIX		:= $(CURDIR)/local$(MULTI_SUFFIX)
 DEFAULT_LIBDIR		:= $(DEFAULT_PREFIX)/lib
 DEFAULT_INCDIR		:= $(DEFAULT_PREFIX)/include
 
-MACOS_MIN_VERSION := 10.15
+MACOS_MIN_VERSION := 10.12
 ifeq ($(PLATFORM), Darwin)
 	PLAT_DARWIN := Yes
 	DEFAULT_MACARGS	:= -mmacosx-version-min="$(MACOS_MIN_VERSION)" -arch x86_64 -arch arm64
+	DEFAULT_MACARGS += -isysroot `xcrun --sdk macosx --show-sdk-path`
 	VIS	:= -fvisibility=hidden
 endif
 ifeq ($(PLATFORM), Linux)
@@ -105,9 +90,9 @@ ARCHIVE_MESA		:= mesa-headers-$(VER_MESA).tar.gz
 
 # libgmp
 ARCHIVE_LIBGMP		:= gmp-$(VER_LIBGMP).tar.xz
-CFLAGS_LIBGMP		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-CXXFLAGS_LIBGMP		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_LIBGMP		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
+CFLAGS_LIBGMP		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(VIS)"
+CXXFLAGS_LIBGMP		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(VIS)"
+LDFLAGS_LIBGMP		:= "-L$(DEFAULT_LIBDIR)"
 CONF_LIBGMP		:= --prefix=$(DEFAULT_PREFIX)
 CONF_LIBGMP		+= --enable-shared=no
 CONF_LIBGMP		+= --enable-cxx
@@ -127,8 +112,8 @@ endif
 
 # libmpfr
 ARCHIVE_LIBMPFR		:= mpfr-$(VER_LIBMPFR).tar.gz
-CFLAGS_LIBMPFR		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_LIBMPFR		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
+CFLAGS_LIBMPFR		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(VIS)"
+LDFLAGS_LIBMPFR		:= "-L$(DEFAULT_LIBDIR)"
 CONF_LIBMPFR		:= --prefix=$(DEFAULT_PREFIX)
 CONF_LIBMPFR		+= --libdir=$(DEFAULT_LIBDIR)
 CONF_LIBMPFR		+= --enable-shared=no
@@ -139,8 +124,8 @@ endif
 
 # libexpat
 ARCHIVE_LIBEXPAT	:= expat-$(VER_LIBEXPAT).tar.gz
-CFLAGS_LIBEXPAT		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_LIBEXPAT	:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
+CFLAGS_LIBEXPAT		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(VIS)"
+LDFLAGS_LIBEXPAT	:= "-L$(DEFAULT_LIBDIR)"
 CONF_LIBEXPAT		:= --prefix=$(DEFAULT_PREFIX)
 CONF_LIBEXPAT		+= --libdir=$(DEFAULT_LIBDIR)
 CONF_LIBEXPAT		+= --enable-shared=no
@@ -150,12 +135,11 @@ endif
 
 # libpng
 ARCHIVE_LIBPNG		:= libpng-$(VER_LIBPNG).tar.gz
-CFLAGS_LIBPNG		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH)"
-LDFLAGS_LIBPNG		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
+CFLAGS_LIBPNG		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(VIS)"
+LDFLAGS_LIBPNG		:= "-L$(DEFAULT_LIBDIR)"
 CONF_LIBPNG		:= --prefix=$(DEFAULT_PREFIX)
 CONF_LIBPNG		+= --libdir=$(DEFAULT_LIBDIR)
 CONF_LIBPNG		+= --enable-shared=no
-CONF_LIBPNG		+= --enable-maintainer-mode
 CONF_LIBPNG		+= --disable-dependency-tracking
 CONF_LIBPNG		+= CCDEPMODE="depmode=none"
 ifdef PLAT_MINGW
@@ -164,8 +148,8 @@ endif
 
 # freetype
 ARCHIVE_FREETYPE	:= freetype-$(VER_FREETYPE).tar.gz
-CFLAGS_FREETYPE		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_FREETYPE	:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
+CFLAGS_FREETYPE		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(VIS)"
+LDFLAGS_FREETYPE	:= "-L$(DEFAULT_LIBDIR)"
 CONF_FREETYPE		:= --prefix=$(DEFAULT_PREFIX)
 CONF_FREETYPE		+= --libdir=$(DEFAULT_LIBDIR)
 CONF_FREETYPE		+= --enable-shared=no
@@ -177,8 +161,8 @@ endif
 # libjpeg
 ARCHIVE_LIBJPEG		:= jpeg-$(VER_LIBJPEG).tar.gz
 CC_LIBJPEG		:= "$(CROSSPREFIX)gcc"
-CFLAGS_LIBJPEG		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_LIBJPEG		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
+CFLAGS_LIBJPEG		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(VIS)"
+LDFLAGS_LIBJPEG		:= "-L$(DEFAULT_LIBDIR)"
 CONF_LIBJPEG		:= --prefix=$(DEFAULT_PREFIX)
 CONF_LIBJPEG		+= --libdir=$(DEFAULT_LIBDIR)
 CONF_LIBJPEG		+= --disable-dependency-tracking
@@ -189,17 +173,16 @@ endif
 
 # libtiff
 ARCHIVE_LIBTIFF		:= tiff-$(VER_LIBTIFF).tar.gz
-CXXFLAGS_LIBTIFF	:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
+CXXFLAGS_LIBTIFF	:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(VIS)"
 ifdef PLAT_DARWIN
-CFLAGS_LIBTIFF		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) -DHAVE_APPLE_OPENGL_FRAMEWORK=1 $(VIS)"
+CFLAGS_LIBTIFF		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 -DHAVE_APPLE_OPENGL_FRAMEWORK=1 $(VIS)"
 else
-CFLAGS_LIBTIFF		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
+CFLAGS_LIBTIFF		:= "-I$(DEFAULT_INCDIR) -O2 $(VIS)"
 endif
-LDFLAGS_LIBTIFF		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
+LDFLAGS_LIBTIFF		:= "-L$(DEFAULT_LIBDIR)"
 CONF_LIBTIFF		:= --prefix=$(DEFAULT_PREFIX)
 CONF_LIBTIFF		+= --libdir=$(DEFAULT_LIBDIR)
 CONF_LIBTIFF		+= --enable-shared=no
-CONF_LIBTIFF		+= --enable-maintainer-mode
 CONF_LIBTIFF		+= --disable-dependency-tracking
 CONF_LIBTIFF		+= --disable-lzma
 CONF_LIBTIFF		+= --disable-jbig
@@ -216,8 +199,8 @@ endif
 
 # libproj
 ARCHIVE_LIBPROJ		:= proj-$(VER_LIBPROJ).tar.gz
-CFLAGS_LIBPROJ		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_LIBPROJ		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
+CFLAGS_LIBPROJ		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(VIS)"
+LDFLAGS_LIBPROJ		:= "-L$(DEFAULT_LIBDIR)"
 CONF_LIBPROJ		:= --prefix=$(DEFAULT_PREFIX)
 CONF_LIBPROJ		+= --libdir=$(DEFAULT_LIBDIR)
 CONF_LIBPROJ		+= --enable-shared=no
@@ -232,8 +215,8 @@ endif
 ARCHIVE_GEOTIFF		:= libgeotiff-$(VER_GEOTIFF).tar.gz
 AR_GEOTIFF		:= "$(CROSSPREFIX)ar"
 LD_GEOTIFF		:= "$(CROSSPREFIX)ld"
-CFLAGS_GEOTIFF		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_GEOTIFF		:= "$(M32_SWITCH) -L$(DEFAULT_LIBDIR)"
+CFLAGS_GEOTIFF		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(VIS)"
+LDFLAGS_GEOTIFF		:= "-L$(DEFAULT_LIBDIR)"
 CONF_GEOTIFF		:= --prefix=$(DEFAULT_PREFIX)
 CONF_GEOTIFF		+= --libdir=$(DEFAULT_LIBDIR)
 CONF_GEOTIFF		+= --enable-shared=no
@@ -273,34 +256,20 @@ CONF_CGAL               += -DBOOST_ROOT=$(DEFAULT_PREFIX)
 ifdef PLAT_DARWIN
 CONF_CGAL		+= -DCMAKE_OSX_SYSROOT=`xcrun --sdk macosx --show-sdk-path`
 CONF_CGAL               += -DCMAKE_OSX_DEPLOYMENT_TARGET="$(MACOS_MIN_VERSION)"
+CONF_CGAL               += -DCMAKE_OSX_ARCHITECTURES="x86_64 -arch arm64"
 endif
 
 # libsquish
 ARCHIVE_LIBSQUISH	:= squish-$(VER_LIBSQUISH).tar.gz
 CONF_LIBSQUISH		:= INSTALL_DIR=$(DEFAULT_PREFIX)
-CONF_LIBSQUISH		+= CPPFLAGS="$(DEFAULT_MACARGS) -DSQUISH_USE_SSE=2 -I$(DEFAULT_INCDIR) $(M32_SWITCH) $(VIS)"
+#CONF_LIBSQUISH		+= CPPFLAGS="$(DEFAULT_MACARGS) -DSQUISH_USE_SSE=2 -I$(DEFAULT_INCDIR) $(VIS)"
+CONF_LIBSQUISH		+= CPPFLAGS="$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) $(VIS)"
 CONF_LIBSQUISH		+= AR="$(CROSSPREFIX)ar" CXX="$(CROSSPREFIX)g++"
-CONF_LIBSQUISH		+= CXXFLAGS="-O2"
-
-# libdime
-ARCHIVE_LIBDIME		:= dime-$(VER_LIBDIME).tar.gz
-CFLAGS_LIBDIME		:= "$(DEFAULT_MACARGS) -I$(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_LIBDIME		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
-CONF_LIBDIME		:= --prefix=$(DEFAULT_PREFIX)
-CONF_LIBDIME		+= --libdir=$(DEFAULT_LIBDIR)
-CONF_LIBDIME		+= --enable-static=yes
-CONF_LIBDIME		+= --enable-shared=no
-CONF_LIBDIME		+= --disable-dependency-tracking
-ifdef PLAT_MINGW
-CONF_LIBDIME		+= --host=$(CROSSHOST)
-endif
+CONF_LIBSQUISH		+= CXXFLAGS="-O3"
 
 # libshp
 ARCHIVE_LIBSHP		:= shapelib-$(VER_LIBSHP).tar.gz
-CFLAGS_LIBSHP		:= "-I$(DEFAULT_MACARGS) $(DEFAULT_INCDIR) -O2 $(M32_SWITCH) $(VIS)"
-LDFLAGS_LIBSHP		:= "-L$(DEFAULT_LIBDIR) $(M32_SWITCH)"
-CONF_LIBSHP		:= AR="$(CROSSPREFIX)ar" CC="$(CROSSPREFIX)gcc"
-CONF_LIBSHP		+= cross=$(M32_SWITCH)
+CONF_LIBSHP		:= CFLAGS="$(DEFAULT_MACARGS) $(VIS)"
 
 ifdef PLAT_LINUX
 EXTRA_LIB :=libcurl
@@ -308,15 +277,14 @@ endif
 
 # targets
 .PHONY: all all_wed clean directories boost mesa_headers libpng libfreetype libjpeg \
-libtiff libproj libgeotiff libcgal libsquish libdime libshp \
-libexpat libgmp libmpfr libcurl
+libtiff libproj libgeotiff libcgal libsquish libshp libexpat libgmp libmpfr libcurl
 
 all_wed: directories \
 libpng libjpeg libtiff libproj libgeotiff libsquish libfreetype libexpat $(EXTRA_LIB)
 	@echo "done making libraries for WED and other xptools except Renderfarm"
 	@echo "use 'make all' to also make libraries for RF like Boost, CGAL"
 
-all: all_wed boost mesa_headers libcgal libdime libshp libgmp libmpfr
+all: all_wed boost mesa_headers libcgal libshp libgmp libmpfr
 	@echo "done making boost, cgal and other Renderfarm only dependencies"
 
 clean:
@@ -532,27 +500,13 @@ libcgal: ./local$(MULTI_SUFFIX)/lib/.xpt_libcgal
 	@touch $@
 
 
-libdime: ./local$(MULTI_SUFFIX)/lib/.xpt_libdime
-./local$(MULTI_SUFFIX)/lib/.xpt_libdime:
-	@echo "building libdime..."
-	@tar -xzf "./archives/$(ARCHIVE_LIBDIME)"
-	@cd "dime-$(VER_LIBDIME)" && \
-	CFLAGS=$(CFLAGS_LIBDIME) CXXFLAGS=$(CFLAGS_LIBDIME) \
-	LDFLAGS=$(LDFLAGS_LIBDIME) \
-	./configure $(CONF_LIBDIME) $(BE_QUIET)
-	@$(MAKE) -C "dime-$(VER_LIBDIME)" install $(BE_QUIET)
-	@-rm -rf dime-$(VER_LIBDIME)
-	@touch $@
-
-
 libshp: ./local$(MULTI_SUFFIX)/lib/.xpt_libshp
 ./local$(MULTI_SUFFIX)/lib/.xpt_libshp:
 	@echo "building libshp..."
 	@tar -xzf "./archives/$(ARCHIVE_LIBSHP)"
 	@cp patches/0001-libshp-fix-makefile-for-multiple-platforms.patch \
 	"shapelib-$(VER_LIBSHP)" && cd "shapelib-$(VER_LIBSHP)" && \
-	patch -p1 < ./0001-libshp-fix-makefile-for-multiple-platforms.patch \
-	$(BE_QUIET)
+	patch -p1 < ./0001-libshp-fix-makefile-for-multiple-platforms.patch $(BE_QUIET)
 	@$(MAKE) -C "shapelib-$(VER_LIBSHP)" $(CONF_LIBSHP) lib $(BE_QUIET)
 	@cp -Lp shapelib-$(VER_LIBSHP)/*.h ./local$(MULTI_SUFFIX)/include
 	@cp shapelib-$(VER_LIBSHP)/.libs/libshp.a ./local$(MULTI_SUFFIX)/lib
