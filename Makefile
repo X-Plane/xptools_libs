@@ -513,8 +513,8 @@ libshp: ./local$(MULTI_SUFFIX)/lib/.xpt_libshp
 	@-rm -rf shapelib-$(VER_LIBSHP)
 	@touch $@
 
-libcurl: ./local$(MULTI_SUFFIX)/lib/libcurl.so.4
-./local$(MULTI_SUFFIX)/lib/libcurl.so.4: patches/libcurl.c
+libcurl: ./local$(MULTI_SUFFIX)/lib/libcurl.so
+./local$(MULTI_SUFFIX)/lib/libcurl.so: patches/libcurl.c
 	@echo "building stub to unversion some math sybmols ..."
 	@-mkdir -p "./local$(MULTI_SUFFIX)/lib"
-	$(CC) -shared -fpic -o $@ $<
+	$(CC) -shared -fpic -Wl,-soname,libcurl.so.4 -o $@ $<
