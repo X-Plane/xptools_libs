@@ -438,9 +438,6 @@ libproj: ./local$(MULTI_SUFFIX)/lib/.xpt_libproj
 ./local$(MULTI_SUFFIX)/lib/.xpt_libproj:
 	@echo "building libproj..."
 	@tar -xzf "./archives/$(ARCHIVE_LIBPROJ)"
-	@cp patches/0001-libproj-disable-win32-mutex.patch \
-	"proj-$(VER_LIBPROJ)" && cd "proj-$(VER_LIBPROJ)" && \
-	patch -p1 < .//0001-libproj-disable-win32-mutex.patch $(BE_QUIET)
 	@cd "proj-$(VER_LIBPROJ)" && \
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_LIBPROJ) LDFLAGS=$(LDFLAGS_LIBPROJ) \
@@ -457,7 +454,7 @@ libgeotiff: ./local$(MULTI_SUFFIX)/lib/.xpt_libgeotiff
 	@echo "building libgeotiff..."
 	@tar -xzf "./archives/$(ARCHIVE_GEOTIFF)"
 	@patch -p0 <patches/0001-libgeotiff-1.4.2-incode.patch
-	@patch -p0 <patches/0002-libgeotiff-1.4.2-python2.patch
+	@patch -p0 <patches/0002-libgeotiff-1.4.2-python3.patch
 	@cd "libgeotiff-$(VER_GEOTIFF)" && \
 	chmod +x configure && \
 	CFLAGS=$(CFLAGS_GEOTIFF) LDFLAGS=$(LDFLAGS_GEOTIFF) \

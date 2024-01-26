@@ -1,0 +1,28 @@
+--- libgeotiff-1.4.2_orig/csv/csv2c.py	2016-08-11 08:40:14.000000000 -0700
++++ libgeotiff-1.4.2/csv/csv2c.py	2024-01-26 00:54:00.000000000 -0800
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ #******************************************************************************
+ #  $Id: csv2c.py 2472 2014-07-30 19:13:04Z hobu $
+ # 
+@@ -49,8 +49,8 @@
+ def emit_token_line( fd, field_list, counter, varname ):
+     fd.write( 'datafile_rows_t %s_row_%d[] = {' % (varname, counter) )
+     for item in field_list:
+-        item = string.replace(item,'\n',' ')
+-        item = string.replace(item,'"','\\\"')
++        item = item.replace('\n',' ')
++        item = item.replace('"','\\\"')
+         fd.write( '"%s",' % item )
+     fd.write( 'NULL};\n' )
+     
+@@ -85,7 +85,7 @@
+ ###############################################################################
+ # main
+ if len(sys.argv) < 3:
+-    print 'Usage: csv2c.py filename.csv filename.c'
++    print( 'Usage: csv2c.py filename.csv filename.c' )
+     sys.exit( 1 )
+ 
+ for arg in sys.argv[1:]:
